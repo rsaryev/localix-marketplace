@@ -26,6 +26,9 @@ test('pane resizing and view switching preserve the rich editor, draft and scrol
   const { act, useState } = await import('react')
   const { createRoot } = await import('react-dom/client')
   const { ResumeCanvas } = await import('./ResumeCanvas')
+  // The canvas loads its editor lazily; loaded here, the lazy import resolves from the module cache
+  // within the turns the test waits, however slow the machine is.
+  await import('./EditorPanel')
   const initial = createTemplateDocument('awal', 'Resume')
   const host = document.createElement('div')
   document.body.append(host)

@@ -13,6 +13,7 @@
     "kit": "bun scripts/kit.ts",
     "check": "bun scripts/check.ts",
     "test:plugins": "bun test --cwd plugins/mini-app-authoring src",
+    "test:scripts": "bun test ./scripts",
     "pack": "bun scripts/pack.ts"
   }
 }

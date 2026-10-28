@@ -13,7 +13,9 @@ const miniApps = [
 ].sort()
 const template = staged.some((file) => file.startsWith('plugins/mini-app-authoring/template/'))
 const plugin = staged.some(
-  (file) => file.startsWith('plugins/') && !file.startsWith('plugins/mini-app-authoring/template/'),
+  (file) =>
+    file.startsWith('scripts/') ||
+    (file.startsWith('plugins/') && !file.startsWith('plugins/mini-app-authoring/template/')),
 )
 
 const run = (cmd: string[], cwd = ROOT) => {

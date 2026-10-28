@@ -9,7 +9,7 @@ import { kitDir, ROOT } from './kit'
  * The template the authoring plugin copies is one of them.
  *
  * Named `plugins`, or with nothing named, it first checks the plugins: the authoring plugin's
- * types and tests, then Claude Code's validation — each plugin with `--strict`, the marketplace
+ * types and tests and this repository's scripts' tests, then Claude Code's validation — each plugin with `--strict`, the marketplace
  * without it, because its `metadata.localix` (Localix's recommendations and collections) is a field
  * Claude Code does not know and ignores at load time.
  */
@@ -36,6 +36,7 @@ function checkPlugins(): boolean {
   return [
     step(['bun', 'run', 'type-check'], join(PLUGINS, 'mini-app-authoring')),
     step(['bun', 'run', 'test:plugins']),
+    step(['bun', 'run', 'test:scripts']),
     ...plugins.map((plugin) => step(['claude', 'plugin', 'validate', '--strict', plugin])),
     step(['claude', 'plugin', 'validate', '.']),
   ].every(Boolean)
