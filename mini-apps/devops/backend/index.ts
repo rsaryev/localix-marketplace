@@ -1,5 +1,5 @@
 /**
- * DevOps Workspace — the single bundled DevOps mini app entrypoint.
+ * DevOps Workspace — the single DevOps mini app entrypoint.
  *
  * Docker and Kubernetes remain separate provider modules because they have
  * different transports and lifecycle needs. They are deliberately composed here

@@ -4,9 +4,10 @@ The API mini app adds a REST client that people and agents can use from the Loca
 stores named requests as workspace-local JSON, resolves environment variables, imports common API
 formats, and can explicitly export reviewable request files into a repository.
 
-The bundled mini app is enabled by default. Its tools and workspace surface still follow the active
-agent's capability rules; inspect or change them in the Store (**Mini apps**) or the agent's Access
-tab.
+For people using it, see the user guide: [api.md](docs/api.md).
+
+Its tools and workspace surface follow the active agent's capability rules; inspect or change them
+in the Store (**Mini apps**) or the agent's Access tab.
 
 ## Contributions
 
@@ -164,5 +165,5 @@ receive its abort signal. The timeout is not a deadline for the complete operati
 - [Environment rendering](./backend/render-spec.ts)
 - [Response masking](./backend/response-redaction.ts)
 - [Collection synchronization](ui/model/useRequests.ts)
-- [Shared file-watcher lifecycle](../../packages/mini-app-sdk/src/ui/file-resource-sync.ts)
+- [Shared file-watcher lifecycle](https://github.com/rsaryev/localix/blob/main/packages/mini-app-sdk/src/ui/file-resource-sync.ts)
 - [Workspace registration](./ui/register.tsx)

@@ -4,6 +4,8 @@ A tic-tac-toe board in the workbench, one per chat, played against the agent in 
 the host's wake contract: a move on the board starts a turn in the owning chat, and the agent
 answers with the mini app's tool.
 
+For people using it, see the games guide: [games.md](../../docs/games.md).
+
 ## How a game goes
 
 1. You play X on the board. The board asks the host to wake the chat it belongs to, with the
@@ -64,7 +66,7 @@ and a visible board re-reads its snapshot. A healthy feed has no periodic read; 
 the board polls every 800 ms during agent activity or 4 seconds while idle. Showing the pane or
 reconnecting reconciles its state.
 
-See [Wake a session from a mini app](../../docs/extending/mini-app-wakes.md) for the contract.
+See [Wake a session from a mini app](https://localix.ai/docs/extending--mini-app-wakes) for the contract.
 
 ## Permissions and synchronization
 
@@ -79,4 +81,4 @@ conversation permission modes still apply.
 - [Game state and transitions](shared/game.ts)
 - [Wake requests](backend/ask-agent.ts)
 - [Visible snapshot and fallback cadence](ui/game/useGame.ts)
-- [Shared store synchronization](../../packages/mini-app-sdk/src/ui/store-snapshot.ts)
+- [Shared store synchronization](https://github.com/rsaryev/localix/blob/main/packages/mini-app-sdk/src/ui/store-snapshot.ts)

@@ -237,7 +237,7 @@ const ci: Command = async (args, context) => {
   const version = typeof manifest.version === 'string' ? manifest.version : '<version>'
   context.out(
     [
-      `Wrote ${WORKFLOW_FILE}: every push and pull request is checked, and a tag v<version> releases the app — built with Localix ${pin.ref}'s toolchain and kit.`,
+      `Wrote ${WORKFLOW_FILE}: every push and pull request is checked, and a tag v<version> releases the app — built with the kit of Localix ${pin.ref}.`,
       `Release: commit and push, then \`git tag v${version} && git push origin v${version}\`. People add https://github.com/<owner>/<repo>/releases/latest/download/mini-app-catalog.json in Localix's mini app store.`,
     ].join('\n'),
   )

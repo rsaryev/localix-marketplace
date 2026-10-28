@@ -5,7 +5,7 @@
   "author": {
     "name": "Localix"
   },
-  "homepage": "https://github.com/rsaryev/localix",
+  "homepage": "https://github.com/rsaryev/localix-marketplace/tree/main/plugins/team",
   "repository": "https://github.com/rsaryev/localix",
   "license": "MIT",
   "keywords": ["localix", "agents", "team"]

@@ -15,7 +15,7 @@ import type { FileEditorProps, MiniAppUiHost } from '@localixai/mini-app-sdk/ui'
 import { useDocumentsStatusItem } from './statusItem'
 
 /**
- * UI registration for the bundled Documents workbench: the dedicated file viewers
+ * UI registration for the Documents workbench: the dedicated file viewers
  * (PDF / office document / spreadsheet-as-table) and content-type routing entries.
  * Discovered and invoked generically by
  * `shared/contrib/discover.ts` (`registerUi` export), mirroring the database mini app.

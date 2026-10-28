@@ -18,16 +18,15 @@ const step = (name: string, version?: string) =>
   workflow(version).jobs.build.steps.find((s) => s.name === name)!
 
 describe('the release workflow', () => {
-  test('builds with the toolchain and kit of the Localix the app was made with', () => {
+  test('builds with the kit of the Localix the app was made with and the plugin from its marketplace', () => {
     const { env, jobs } = workflow('0.1.0-beta.18')
 
-    expect(env.LOCALIX_REF).toBe('v0.1.0-beta.18')
     expect(env.MINI_APP_KIT_RELEASES).toBe(
       'https://github.com/rsaryev/localix/releases/download/v0.1.0-beta.18',
     )
-    const toolchain = jobs.build.steps.find((s) => s.with?.repository === 'rsaryev/localix')
+    const toolchain = jobs.build.steps.find((s) => s.name === 'The mini app toolchain')
     expect(toolchain?.with).toMatchObject({
-      ref: '${{ env.LOCALIX_REF }}',
+      repository: 'rsaryev/localix-marketplace',
       'sparse-checkout': 'plugins/mini-app-authoring',
     })
   })
@@ -36,7 +35,6 @@ describe('the release workflow', () => {
   test('follows the latest Localix when the app was made with an unreleased one', () => {
     const { env } = workflow('unknown')
 
-    expect(env.LOCALIX_REF).toBe('main')
     expect(env.MINI_APP_KIT_RELEASES).toBe(
       'https://github.com/rsaryev/localix/releases/latest/download',
     )

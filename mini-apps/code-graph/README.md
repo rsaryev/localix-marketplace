@@ -2,7 +2,7 @@
 
 A map of a chat's project in the workbench — directories, files and symbols joined by imports, calls
 and inheritance — and seven agent tools that query the graph and control its view. User
-documentation is [docs/features/code-graph.md](../../docs/features/code-graph.md); this file is for
+documentation is [docs/code-graph.md](docs/code-graph.md); this file is for
 working on the mini app.
 
 ## Layout

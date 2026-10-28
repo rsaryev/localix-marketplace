@@ -103,7 +103,7 @@ export function registerUi(host: MiniAppUiHost): void {
     title: 'DevOps',
     label: 'DevOps — containers & Kubernetes',
     // A full workspace belongs in the central grid. Keep its launcher with other
-    // bundled mini app workbenches under `… → Mini apps`, not in the narrow primary rail.
+    // mini app workbenches under `… → Mini apps`, not in the narrow primary rail.
     defaultArea: 'overflow',
     keywords: [
       'workspace',

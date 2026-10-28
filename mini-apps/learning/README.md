@@ -2,6 +2,8 @@
 
 Learning Studio turns Localix into a file-authored course builder and a focused study workspace.
 
+![A course open in Learning Studio](docs/assets/course--2026-10-08.png)
+
 Courses belong to chat sessions. One session may contain several courses and open several course
 tabs, but its library, progress, resources, and files are never visible from another session.
 
@@ -67,7 +69,7 @@ Use `/learning:adapt` to patch only the affected lesson files and re-activate th
 
 ## Related guides
 
-- [Memory and Learning Studio](../../docs/features/learning-loop.md)
+- [Memory and Learning Studio](https://localix.ai/docs/features--learning-loop)
 
 ## Source of truth
 

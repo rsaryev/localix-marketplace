@@ -2,7 +2,7 @@
 
 One spatial board per project: notes, shapes, frames and connectors beside live references to the
 project's files, folders, code, images and documents, edited by the person and the agent. User
-documentation is [docs/features/project-space.md](../../docs/features/project-space.md); this file
+documentation is [docs/project-space.md](docs/project-space.md); this file
 is for working on the mini app.
 
 ## Layout

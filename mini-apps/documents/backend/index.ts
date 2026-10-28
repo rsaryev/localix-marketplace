@@ -1,5 +1,5 @@
 /**
- * Documents workbench — bundled first-party mini app backend.
+ * Documents workbench — first-party mini app backend.
  *
  * `register(ctx)` gets (or lazily builds) the process-wide documents + table
  * services and contributes them as two `BackendSubsystem`s: the boot-time loader

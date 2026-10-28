@@ -6,6 +6,8 @@ trade data, computes technical reads, and exposes public data to agent sessions.
 agent-tool roster currently contains only `public:hyperliquid`; the workbench can browse additional
 venues.
 
+For people using it, see the user guide: [trading.md](docs/trading.md).
+
 The registered implementation is read-only with respect to exchanges: it passes no credentials to
 its REST driver, exposes no account routes, and registers no order-placement or cancellation tool.
 
@@ -42,9 +44,9 @@ its REST driver, exposes no account routes, and registers no order-placement or 
 separates reads from UI changes. Agent rules and conversation modes decide whether a call proceeds
 or asks; exchange orders remain outside this mini app's capabilities.
 
-## Default state
+## Turning it off
 
-The bundled mini app is enabled by default. Disabling it makes its agent tools, backend subsystem,
+Disabling the mini app makes its agent tools, backend subsystem,
 resources, search scope, live stream contribution, and workbench surfaces unavailable.
 
 ## Requirements
@@ -116,9 +118,9 @@ This target-count bound does not cap each series's total candle count.
 
 ## Related guides
 
-- [Build a mini app](../../docs/extending/mini-apps.md)
-- [Workspace](../../docs/features/workspace.md)
-- [Capabilities and permissions](../../docs/features/capabilities.md)
+- [Build a mini app](https://localix.ai/docs/extending--mini-apps)
+- [Workspace](https://localix.ai/docs/features--workspace)
+- [Capabilities and permissions](https://localix.ai/docs/features--capabilities)
 
 ## Source of truth
 

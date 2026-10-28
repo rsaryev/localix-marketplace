@@ -42,5 +42,5 @@ the tools pick it up without a restart.
 a new name, renames its identity and tools, and prints the instruction an agent follows to replace
 the domain. `scaffold.json` says which files a copy keeps (entries), which it replaces (domain) and
 which identifiers `mini-app check` reports when a copy still carries them.
-[Publish a mini app](https://github.com/rsaryev/localix/blob/main/docs/extending/mini-app-publishing.md)
+[Publish a mini app](https://localix.ai/docs/extending--mini-app-publishing)
 covers packing and sharing.

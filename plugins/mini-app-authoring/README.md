@@ -4,13 +4,14 @@ A Claude Code plugin for making [Localix](https://github.com/rsaryev/localix) mi
 backend and agent tools that run inside Localix — and sharing them. It works the same in Claude Code
 and in Localix.
 
-**In Localix** it is built in: nothing to install. Type `/mini-app-authoring:create` in any chat
-with what the app should do.
+It is published in the Localix marketplace (`rsaryev/localix-marketplace`), which Localix trusts and
+adds on first start. **In Localix**, install it from the Store (Plugins), then type
+`/mini-app-authoring:create` in any chat with what the app should do.
 
-**In Claude Code**, add it once:
+**In Claude Code**, add the marketplace once and install it:
 
 ```text
-/plugin marketplace add rsaryev/localix
+/plugin marketplace add rsaryev/localix-marketplace
 /plugin install mini-app-authoring@localix
 ```
 
@@ -50,8 +51,8 @@ whole contract with the instruction, so the agent writes only the domain and the
 publisher as `author`. The workflow checks every push and pull request. A tag `v<version>` matching
 `mini-app.json` makes it pack the catalog and attach it to a GitHub release, so people add
 `https://github.com/<owner>/<repo>/releases/latest/download/mini-app-catalog.json` once and get
-every later version. It builds with the toolchain and kit of the Localix release the app was made
-with, checking out only this plugin's folder from Localix's repository at that release's tag.
+every later version. It builds against the kit of the Localix release the app was made with, and
+checks out only this plugin's folder from the marketplace.
 
 ## How it relates to Localix
 
@@ -68,7 +69,7 @@ this plugin's job. The two meet in two places:
   installed from Localix's mini app store like any other.
 
 The plugin depends on nothing but Bun (it finds one on PATH, in `~/.bun`, or inside Localix) and
-imports nothing from the Localix repository, so it can live in a repository of its own.
+imports nothing from the Localix repository.
 
 ## Developing it
 

@@ -17,7 +17,7 @@ export interface DatabaseDriverDefinition<Dialect extends DbDialect = DbDialect>
    *
    * Importing all eight eagerly cost a measured **120 ms of every API boot** — a
    * third of it — for connections most sessions never open. The mini app ships
-   * `defaultEnabled: true`, and a bundled mini app defaults on per project scope,
+   * `defaultEnabled: true`, and a mini app defaults on per project scope,
    * so that price was paid by users who had switched the mini app off globally.
    * Per-module cost: mssql 76 ms, elasticsearch 69, mongo 41, mysql 21,
    * clickhouse 15, postgres 7, redis and sqlite 1 each.

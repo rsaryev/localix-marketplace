@@ -6,7 +6,7 @@ import { resolveKubernetesAnchor } from './register/anchor'
 import { KubernetesPodBody, KubernetesResourceBody } from './register/bodies'
 
 /**
- * UI registration for the bundled Kubernetes subsystem: two editor-grid WorkItem
+ * UI registration for the Kubernetes subsystem: two editor-grid WorkItem
  * kinds (pod + node/deployment/service), the search scope, and the resource anchors.
  *
  * The body adapters live in `register/bodies.tsx` and URI activation in

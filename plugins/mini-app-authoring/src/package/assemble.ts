@@ -32,6 +32,8 @@ const LEFT_BEHIND = new Set([
   'KIT.md',
   'CLAUDE.md',
 ])
+/** The app's pages and figures for readers of its repository; a file the manifest names ships. */
+const DOCS_DIR = 'docs/'
 const TEST_FILE = /\.test\.[a-z]+$/u
 /** Sources the bundles absorb; one the manifest names itself (an options script) is kept. */
 const SOURCE_FILE = /\.(?:[cm]?tsx?|jsx)$/u
@@ -71,6 +73,7 @@ async function copyShipped(
       throw new Error(`${rel} is not a regular file; a mini app package holds only files`)
     }
     if (rel === MANIFEST_FILE || TEST_FILE.test(entry.name)) continue
+    if (rel.startsWith(DOCS_DIR) && !declared.has(rel)) continue
     if (SOURCE_FILE.test(entry.name) && !declared.has(rel)) continue
     await fs.mkdir(to, { recursive: true })
     await fs.copyFile(source, join(to, entry.name))

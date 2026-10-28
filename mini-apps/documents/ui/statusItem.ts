@@ -46,7 +46,7 @@ function basename(path: string): string {
  * to: no request, no cache, no poll, and no import of the viewer chunks it names.
  *
  * Nothing open in a viewer, no control. A session that is not reading a document hears nothing
- * from this mini app — the same silence rule every other bundled item follows.
+ * from this mini app — the same silence rule every other item follows.
  *
  * A row re-opens its file in the session the item is drawn for (`sessionId`), never "the active
  * one": the item is mounted per surface, and a guessed chat opened the file in whichever chat was

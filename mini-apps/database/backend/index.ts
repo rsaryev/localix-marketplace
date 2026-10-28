@@ -1,5 +1,5 @@
 /**
- * Database workbench — bundled first-party mini app backend.
+ * Database workbench — first-party mini app backend.
  *
  * `register(ctx)` gets (or lazily builds) the process-wide database service and
  * contributes it as a `BackendSubsystem`: the boot-time loader (`loadMiniAppBackends`)

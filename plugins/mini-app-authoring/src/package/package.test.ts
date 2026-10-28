@@ -87,6 +87,27 @@ describe('assemblePackage', () => {
     expect(files(packageDir)).not.toContain('package.json')
   })
 
+  test('the docs for readers of its repository stay behind, unless the manifest names one', async () => {
+    const { dir } = checkedApp()
+    writeTree(dir, {
+      'docs/gpu-monitor.md': '# GPU Monitor',
+      'docs/assets/board.png': 'png',
+      'docs/help.md': '# Help',
+    })
+    const manifest = { ...MANIFEST, guide: './docs/help.md' }
+    writeTree(dir, { 'mini-app.json': JSON.stringify(manifest) })
+    const outputs = {
+      dir: join(dir, 'dist/.candidate-1'),
+      manifest,
+      backend: './dist/backend/index-abc.mjs',
+      hasUi: true,
+    }
+    const shipped = files(await assemblePackage(dir, outputs))
+    expect(shipped).toContain('docs/help.md')
+    expect(shipped).not.toContain('docs/gpu-monitor.md')
+    expect(shipped).not.toContain('docs/assets/board.png')
+  })
+
   test('a second build replaces the first package whole', async () => {
     const { dir, outputs } = checkedApp()
     await assemblePackage(dir, outputs)

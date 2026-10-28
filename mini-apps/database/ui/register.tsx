@@ -42,11 +42,11 @@ function dbResourceBinding(item: WorkItemLike) {
 }
 
 /**
- * UI registration for the bundled Database workbench. Contributes its editor-grid
+ * UI registration for the Database workbench. Contributes its editor-grid
  * `db-console` WorkItem kind, its root Database Workspace, its global-search hit
  * activation, its `@resource:localix://resource/db` node glyphs, and the `.sql`-file editor into the OPEN
  * contrib registries — so core hardcodes the workbench nowhere. Discovered + invoked
- * generically by `shared/contrib/discover.ts` (`registerUi` export), mirroring the bundled
+ * generically by `shared/contrib/discover.ts` (`registerUi` export), mirroring the
  * container / cluster workbench mini apps. The bodies themselves live in `workItemBodies.tsx`.
  */
 

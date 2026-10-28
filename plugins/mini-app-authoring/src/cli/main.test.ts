@@ -65,7 +65,7 @@ describe('mini-app', () => {
 
     expect(await runCli(['ci', '--publisher', 'rsaryev'], context)).toBe(0)
     const workflow = await Bun.file(`${dir}/.github/workflows/mini-app.yml`).text()
-    expect(workflow).toContain('LOCALIX_REF: v0.1.0-beta.18')
+    expect(workflow).toContain('releases/download/v0.1.0-beta.18')
     expect(await Bun.file(`${dir}/mini-app.json`).json()).toMatchObject({ author: 'rsaryev' })
     expect(await Bun.file(`${dir}/.gitignore`).text()).toContain('tsconfig.json')
     expect(output()).toContain('git tag v')

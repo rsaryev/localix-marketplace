@@ -8,11 +8,10 @@ import { LOCALIX_REPO } from '../kit/resolve'
  * releases it, so a release is made from the committed source by the same checks Localix applies —
  * never a package someone built on their own computer and uploaded by hand.
  *
- * The workflow runs the toolchain and the kit of ONE Localix release, the one the app was made
- * with: the plugin's folder is checked out alone from Localix's repository at that release's tag
- * (the whole repository is about 200 MB, the toolchain under 1 MB), and the kit comes from that
- * release's assets, verified against its checksums. An app made with a development build follows
- * the latest release instead, since no tag carries that build.
+ * The workflow builds against the kit of ONE Localix release, the one the app was made with,
+ * downloaded from that release's assets and verified against its checksums; an app made with a
+ * development build follows the latest release instead, since no release carries that build. The
+ * toolchain is this plugin, checked out alone from the marketplace it is published in.
  */
 
 /** Where the workflow is written inside the mini app. */
@@ -34,8 +33,11 @@ export const GENERATED_IGNORES = [
 
 const RELEASE_VERSION = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u
 
+/** The marketplace this plugin is published in: the workflow checks the toolchain out of it. */
+export const MARKETPLACE_REPO = 'rsaryev/localix-marketplace'
+
 export interface LocalixPin {
-  /** The ref of Localix's repository the toolchain is checked out at. */
+  /** The Localix release the kit comes from (`v<version>`), or `latest`. */
   ref: string
   /** The release folder the kit is downloaded from (`MINI_APP_KIT_RELEASES`). */
   kitReleases: string
@@ -46,7 +48,7 @@ export function localixPin(localixVersion: string | undefined): LocalixPin {
   const releases = `https://github.com/${LOCALIX_REPO}/releases`
   return localixVersion && RELEASE_VERSION.test(localixVersion)
     ? { ref: `v${localixVersion}`, kitReleases: `${releases}/download/v${localixVersion}` }
-    : { ref: 'main', kitReleases: `${releases}/latest/download` }
+    : { ref: 'latest', kitReleases: `${releases}/latest/download` }
 }
 
 /** Add what `GENERATED_IGNORES` lacks to the mini app's `.gitignore`; the lines it added. */
@@ -83,8 +85,7 @@ permissions:
   contents: write
 
 env:
-  # The Localix this app is built against: its mini app toolchain and its kit.
-  LOCALIX_REF: ${pin.ref}
+  # The Localix this app is built against: the kit of its release ${pin.ref}.
   MINI_APP_KIT_RELEASES: ${pin.kitReleases}
 
 jobs:
@@ -97,8 +98,7 @@ jobs:
       - name: The mini app toolchain
         uses: actions/checkout@v5
         with:
-          repository: ${LOCALIX_REPO}
-          ref: \${{ env.LOCALIX_REF }}
+          repository: ${MARKETPLACE_REPO}
           path: localix
           sparse-checkout: plugins/mini-app-authoring
           filter: blob:none

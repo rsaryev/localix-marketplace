@@ -128,8 +128,8 @@ declaration without their own dialect switches.
 
 ## Related guides
 
-- [Database user guide and engine validation boundaries](../../docs/features/database.md)
-- [Bundled mini app ownership](../README.md)
+- [Database user guide and engine validation boundaries](docs/database.md)
+- [First-party mini apps](../README.md)
 
 ## Source of truth
 

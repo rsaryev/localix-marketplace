@@ -1,5 +1,5 @@
 /**
- * UI registration for the bundled API Client subsystem.
+ * UI registration for the API Client subsystem.
  *
  * The mini app contributes ONE workspace (a rail VIEWLET → one grid tab per chat, since the
  * collection lives in that chat's project) plus the per-request tab kind a user can pop out of it,

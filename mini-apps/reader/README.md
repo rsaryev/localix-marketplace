@@ -5,6 +5,8 @@ and plain-text documents. It stores reading preferences, annotations, and progre
 its backend persists the explicit shelf and reading statistics. It exposes books, chapters, and
 selected passages through Localix's native resource, binding, search, and context systems.
 
+For people using it, see the user guide: [reader.md](docs/reader.md).
+
 ## What it provides
 
 - An explicit-only library: only documents the user opens or drops are added.

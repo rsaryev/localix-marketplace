@@ -3,13 +3,14 @@
 The source of Localix's first-party mini apps. A mini app is Localix's own format, not a Claude Code
 plugin: one `mini-app.json` (identity, category, backend, settings, commands), a `guide.md` the
 agent reads with `MiniAppGuide` before it first uses the app, a native backend (`backend/`) and
-screens (`ui/`). It holds no `skills/`, `.claude-plugin/` or hooks, and Localix ships no mini apps.
-The contract and the migration status:
-[plugins and mini apps](../docs/internals/plugins-and-mini-apps.md).
+screens (`ui/`). It holds no `skills/`, `.claude-plugin/` or hooks; see
+[plugins and mini apps](https://github.com/rsaryev/localix/blob/main/docs/internals/plugins-and-mini-apps.md).
 
-Until the catalog ships (phase 4 of that page), the build stages these mini apps and the application
-synchronizes managed copies into `~/.localix/mini-apps`; discovery reads the installed copy rather
-than this source tree.
+Localix ships none of them. A tag `v*` of this repository releases them as one catalog,
+`mini-app-catalog.json` (`bun run pack`), which Localix trusts: they install from its Store (**Mini
+apps**) like any other, and the store features and recommends the ones
+[`catalog-picks.json`](catalog-picks.json) names. Each app's guide for people using it is in its
+`docs/` folder; [games](../docs/games.md) and the [recipes](../docs/recipes/) span several.
 
 ## Workbenches
 
@@ -23,7 +24,6 @@ than this source tree.
 | [Project Space](project-space/) | Shared notes and live file cards on a canvas.                        |
 | [Reader](reader/)               | Local books and documents with annotations and agent context.        |
 | [Resumes](resume/)              | Resume fields, templates, preview, and document export.              |
-| [Daily Log](template/)          | Entries the agent logs against a daily goal; the workbench scaffold. |
 | [Trading](trading/)             | Public market data; no order placement.                              |
 
 ## Workflow and integration mini apps
@@ -45,12 +45,6 @@ than this source tree.
 | [Rock Paper Scissors](rock-paper-scissors/) | Sealed moves against the agent, checked by digest. |
 | [Snake](snake/)                             | A per-chat board steered by the user or a model.   |
 | [Tic-Tac-Toe](tic-tac-toe/)                 | A per-chat board and agent-opponent play.          |
-
-[Daily Log](template/) doubles as the workbench reference: retain its entries (`mini-app.json`,
-`guide.md`, `icon.svg`, `backend/index.ts`, `ui/register.tsx`) when copying, then replace its domain
-code. The routes, storage, live updates and search come from the SDK's app layer (`createMiniApp`,
-`defineCollection`, `useCollection`, `screenUi`), so there is no helper code to keep. Its
-[AGENTS.md](template/AGENTS.md) defines that boundary.
 
 ## Runtime model
 
@@ -82,31 +76,25 @@ source before enabling code you do not trust.
 
 ## Contributor workflow
 
-A mini app a user asks for is not one of these: the
-[mini-app-authoring plugin](../plugins/mini-app-authoring/README.md) forks [`template/`](template/)
-(shipped in the app's kit) into the user's folder, builds and tests it there, and installs the
-package into Localix. Nothing in this repository changes when a user creates one.
+A mini app a person asks for is not one of these: the
+[mini-app-authoring plugin](../plugins/mini-app-authoring/README.md) forks its
+[template](../plugins/mini-app-authoring/template/) into the person's folder, builds and tests it
+there, and installs it into Localix.
 
-To add a first-party mini app, copy [`template/`](template/) by hand — its
-[`scaffold.json`](template/scaffold.json) lists the entries to keep and the domain to replace. A
-running `bun run dev` re-stages the mini app on every save (`scripts/dev-mini-app-watch.mjs`), and
-the workbench swaps its UI in place.
-
-Use a focused check for the mini app being changed, from the repository root:
+To add one here, create it with `mini-app create <name>` inside `mini-apps/`, then check it from the
+repository root:
 
 ```bash
-bun test mini-apps/kanban
-bun run --cwd mini-apps/code-graph type-check
+bun run check kanban       # mini-app check for one app: manifest, style, builds, types, tests
+bun test mini-apps/kanban  # its tests alone
 ```
 
-Build required workspace dependencies before raw package checks; see
-[Contributing](../CONTRIBUTING.md). CI owns the complete test, type, and repository gates.
-
-The [mini app SDK](../packages/mini-app-sdk/README.md) owns typed host contracts.
+`bun run check` with no name checks the plugins and every mini app, as CI does. The
+[mini app SDK](https://github.com/rsaryev/localix/blob/main/packages/mini-app-sdk/README.md) owns
+the typed host contracts.
 
 ## Source of truth
 
-- [Manifest contract](../packages/mini-app-sdk/src/manifest/app.ts)
-- [Installed artifact trust](../apps/api/src/features/ext/trust.ts)
-- [Developer watcher](../scripts/dev-mini-app-watch.mjs)
-- [Mini app SDK entry points](../packages/mini-app-sdk/README.md)
+- [Manifest contract](https://github.com/rsaryev/localix/blob/main/packages/mini-app-sdk/src/manifest/app.ts)
+- [Installed artifact trust](https://github.com/rsaryev/localix/blob/main/apps/api/src/features/ext/trust.ts)
+- [Mini app SDK entry points](https://github.com/rsaryev/localix/blob/main/packages/mini-app-sdk/README.md)

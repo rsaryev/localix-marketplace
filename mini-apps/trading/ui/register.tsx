@@ -32,7 +32,7 @@ import { normalizeTradingArea, saveTradingArea } from './model/tradingArea'
 import { chartToMessageBinding, technicalsToMessageBinding } from './model/tabBindings'
 
 /**
- * UI registration for the bundled Trading subsystem. Contributes one root Trading Workspace
+ * UI registration for the Trading subsystem. Contributes one root Trading Workspace
  * plus its chart/technicals work-item kinds through the {@link MiniAppUiHost}
  * registration façade (the mini app SDK contract). It is discovered + invoked
  * generically by `shared/contrib/discover.ts`.

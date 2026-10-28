@@ -8,7 +8,7 @@ import { resolveDockerAnchor } from './register/anchor'
 import { DockerContainerBody, DockerManifestTab, DockerResourceBody } from './register/bodies'
 
 /**
- * UI registration for the bundled Docker subsystem. The feature contributes its
+ * UI registration for the Docker subsystem. The feature contributes its
  * editor-grid WorkItem kinds, search scope, anchors, and manifest editor into the
  * open `uiContrib` registries here instead of core hardcoding Docker anywhere.
  *

@@ -1,9 +1,11 @@
 # Snake
 
-This bundled mini app adds a Snake board per chat. The person chooses **I play** or **Model plays**.
+This mini app adds a Snake board per chat. The person chooses **I play** or **Model plays**.
 The person steers with the arrow keys or a swipe; the decision model is asked by the board itself,
 one move at a time. There is no chat-agent player: the agent's `snake` tool only reads the board and
 starts a game.
+
+For people using it, see the user guide: [snake.md](docs/snake.md).
 
 | Path                      | What it holds                                                              |
 | ------------------------- | -------------------------------------------------------------------------- |

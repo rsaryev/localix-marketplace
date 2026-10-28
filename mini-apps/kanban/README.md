@@ -2,7 +2,7 @@
 
 A passive task board per chat: epics, tasks, dependencies, checklists, owners and blockers, kept by
 the person and the agent in that chat. The board records work; it never starts it. The product page
-is [docs/features/task-board.md](../../docs/features/task-board.md).
+is [docs/task-board.md](docs/task-board.md).
 
 ## One board per chat
 

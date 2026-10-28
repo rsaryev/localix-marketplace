@@ -111,7 +111,7 @@ function ProvenanceSlot({ value }: { value?: unknown }) {
 
 let registered = false
 
-/** Register the Git surface through the same open workbench seams as other bundled mini apps. */
+/** Register the Git surface through the same open workbench seams as other mini apps. */
 export function registerUi(host: MiniAppUiHost): void {
   if (registered) return
   registered = true

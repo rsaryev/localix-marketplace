@@ -19,7 +19,7 @@ export interface ExtractInput {
  * REST client for the document-extraction service (`POST /rpc/documents/extract`).
  * Backs the inspector office/PDF viewers: office text/slides → Markdown, spreadsheets
  * → a dataview table. The heavy extraction is cached content-addressed server-side.
- * Raw fetch (not the typed hono client): the route is mounted by the bundled
+ * Raw fetch (not the typed hono client): the route is mounted by the
  * documents MINI APP, so it is not part of core's `AppType`.
  *
  * Failures arrive as `MiniAppApiError`, carrying the route's classified sentence and the

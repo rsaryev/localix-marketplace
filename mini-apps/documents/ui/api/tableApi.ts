@@ -21,7 +21,7 @@ export interface TableRowsQuery {
 /**
  * REST client for the inspector Table tab (lazy rows, export, open-in-app).
  * Raw fetch (not the typed hono client): the `/rpc/table` routes are mounted by
- * the bundled documents MINI APP, so they are not part of core's `AppType`.
+ * the documents MINI APP, so they are not part of core's `AppType`.
  */
 export const tableApi = {
   async getMeta(id: string): Promise<TableMeta> {

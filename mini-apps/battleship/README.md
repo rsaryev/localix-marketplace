@@ -5,6 +5,8 @@ Tic-Tac-Toe mini app's shape — a person's shot wakes the chat through the host
 the agent answers with the mini app's own tool — plus the one thing the other games do not have:
 hidden information.
 
+For people using it, see the games guide: [games.md](../../docs/games.md).
+
 ## How a game goes
 
 1. Both fleets are placed at random when a game starts; before the first shot you may place yours
@@ -86,7 +88,7 @@ reconnecting reconciles its state.
 The stream frame carries no fleet state; the route projects the player’s view and reveals the
 opponent fleet only when the game ends.
 
-See [Wake a session from a mini app](../../docs/extending/mini-app-wakes.md) for the contract.
+See [Wake a session from a mini app](https://localix.ai/docs/extending--mini-app-wakes) for the contract.
 
 ## Permissions and synchronization
 
@@ -101,4 +103,4 @@ conversation permission modes still apply.
 - [Game state and transitions](shared/game.ts)
 - [Wake requests](backend/ask-agent.ts)
 - [Visible snapshot and fallback cadence](ui/game/useGame.ts)
-- [Shared store synchronization](../../packages/mini-app-sdk/src/ui/store-snapshot.ts)
+- [Shared store synchronization](https://github.com/rsaryev/localix/blob/main/packages/mini-app-sdk/src/ui/store-snapshot.ts)

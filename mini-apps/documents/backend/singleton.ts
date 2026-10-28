@@ -1,5 +1,5 @@
 /**
- * Process-wide documents/table services for the bundled documents mini app.
+ * Process-wide documents/table services for the documents mini app.
  *
  * `register()` runs on every load (boot-time backend load AND per-run tool load),
  * but the extraction cache, table store and their in-memory state must be one
