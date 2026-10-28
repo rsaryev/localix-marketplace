@@ -1,0 +1,3 @@
+[test]
+# The kit first (shared modules, DOM), then the mini app's own setup, which imports the SDK.
+preload = ["@localixai/mini-app-kit/test-preload", "./test-preload.ts"]

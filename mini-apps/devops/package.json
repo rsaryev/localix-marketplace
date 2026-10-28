@@ -1,0 +1,23 @@
+{
+  "name": "@localix-mini-app/devops",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Dependencies for the DevOps Workspace. Docker and Kubernetes providers ship behind one mini app entrypoint and one workspace surface.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "check": "mini-app check ."
+  },
+  "dependencies": {
+    "@iconify-icons/vscode-icons": "^2.0.19",
+    "@kubernetes/client-node": "^2.0.1",
+    "@tanstack/react-virtual": "^3.14.21",
+    "isomorphic-ws": "^5.0.0",
+    "ws": "^8.22.0",
+    "yaml": "^2.9.0"
+  },
+  "devDependencies": {
+    "@happy-dom/global-registrator": "21.0.4",
+    "radix-ui": "1.8.1"
+  }
+}

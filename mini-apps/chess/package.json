@@ -1,0 +1,14 @@
+{
+  "name": "@localix-mini-app/chess",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Dependencies for the Chess mini app: a board whose moves wake the agent in its chat.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "check": "mini-app check ."
+  },
+  "dependencies": {
+    "chess.js": "^1.4.0"
+  }
+}

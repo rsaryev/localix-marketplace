@@ -1,0 +1,21 @@
+{
+  "name": "@localix-mini-app/reader",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Explicit-only local reading workspace with agent context and native links.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "check": "mini-app check ."
+  },
+  "dependencies": {
+    "@thednp/dommatrix": "^3.1.2",
+    "@xmldom/xmldom": "^0.9.12",
+    "fflate": "^0.8.3",
+    "foliate-js": "github:readest/foliate-js#68d54b1bd9599d37ad2e6ff6a62121745dd43bb6",
+    "highlight.js": "^11.12.0",
+    "linkedom": "^0.18.14",
+    "node-html-parser": "^9.0.5",
+    "pdfjs-dist": "6.4.299"
+  }
+}

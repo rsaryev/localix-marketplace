@@ -1,0 +1,43 @@
+{
+  "name": "localix",
+  "owner": {
+    "name": "Localix"
+  },
+  "metadata": {
+    "description": "Localix's own Claude Code plugins and mini apps. Localix trusts this marketplace and adds it on first start; in Claude Code, add it with claude plugin marketplace add rsaryev/localix-marketplace.",
+    "localix": {
+      "recommended": ["mini-app-authoring", "team"],
+      "collections": [
+        {
+          "id": "build-for-localix",
+          "title": "Build for Localix",
+          "subtitle": "Create a mini app with the agent, then check, install and share it",
+          "style": "row",
+          "items": ["mini-app-authoring", "mini-app:code-graph", "mini-app:api"]
+        }
+      ]
+    }
+  },
+  "plugins": [
+    {
+      "name": "mini-app-authoring",
+      "source": "./plugins/mini-app-authoring",
+      "description": "Create, build, check, install and share Localix mini apps from Claude Code or Localix.",
+      "author": {
+        "name": "Localix"
+      },
+      "category": "development",
+      "homepage": "https://github.com/rsaryev/localix-marketplace/tree/main/plugins/mini-app-authoring"
+    },
+    {
+      "name": "team",
+      "source": "./plugins/team",
+      "description": "Starter specialist agents: architect, backend, frontend, design and devops.",
+      "author": {
+        "name": "Localix"
+      },
+      "category": "development",
+      "homepage": "https://github.com/rsaryev/localix-marketplace/tree/main/plugins/team"
+    }
+  ]
+}

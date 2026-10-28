@@ -1,0 +1,27 @@
+{
+  "name": "@localix-mini-app/documents",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Dependencies of the bundled `documents` workbench mini app. Heavy office libs live HERE (not in apps/api) — the staging build pre-bundles them into backend/index.bundle.mjs, so shipped mini apps stay self-contained. turndown is deliberately duplicated with apps/api (the web readability tool keeps its own copy).",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "check": "mini-app check ."
+  },
+  "dependencies": {
+    "docx": "^9.13.0",
+    "fontkit": "^2.0.4",
+    "hono": "^4.12.30",
+    "mammoth": "^1.13.0",
+    "officeparser": "^8.2.0",
+    "pdfkit": "^0.20.2",
+    "turndown": "^7.2.4",
+    "turndown-plugin-gfm": "^1.0.2",
+    "word-extractor": "^1.0.4",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  },
+  "devDependencies": {
+    "@types/pdfkit": "^0.17.6",
+    "fflate": "^0.8.3"
+  }
+}

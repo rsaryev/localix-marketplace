@@ -1,0 +1,6 @@
+#!/bin/sh
+# Deterministic: the same staged files always run the same checks. Each mini app with a staged
+# change gets `mini-app check`; a staged plugin or marketplace change runs the whole check: the plugins'
+# types, tests and Claude Code validation, then every mini app.
+set -e
+exec bun scripts/pre-commit.ts

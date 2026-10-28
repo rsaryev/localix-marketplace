@@ -1,0 +1,11 @@
+{
+  "name": "@localix-mini-app/game-2048",
+  "version": "0.1.0",
+  "private": true,
+  "description": "",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "check": "mini-app check ."
+  }
+}

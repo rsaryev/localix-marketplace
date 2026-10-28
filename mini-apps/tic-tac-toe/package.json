@@ -1,0 +1,11 @@
+{
+  "name": "@localix-mini-app/tic-tac-toe",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Dependencies for the Tic-Tac-Toe mini app: a board whose moves wake the agent in the open chat.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "check": "mini-app check ."
+  }
+}
