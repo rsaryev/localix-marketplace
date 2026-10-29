@@ -13,6 +13,7 @@ import { findTemplateResidue, listFiles, loadTemplateScaffold } from '../scaffol
 import { checkMiniAppBindings } from './bindings'
 import { checkMiniAppStoreMedia } from './media'
 import { checkMiniAppRoutes } from './routes'
+import { checkMiniAppSecrets } from './secrets'
 import { checkMiniAppStyle } from './style'
 import { typecheckMiniApp, writeMiniAppTsconfig } from './typecheck'
 
@@ -138,6 +139,7 @@ export async function checkMiniApp(input: {
     step('routes', () => checkMiniAppRoutes(miniAppDir, kit)),
     step(STORE_MEDIA_STEP, () => checkMiniAppStoreMedia(kit, miniAppDir, manifest)),
     step('message context', () => checkMiniAppBindings(miniAppDir)),
+    step('private keys', () => checkMiniAppSecrets(miniAppDir)),
     step('backend build', async () => {
       const entry = backendSource(miniAppDir, manifest)
       if (entry) backend = await buildMiniAppBackend({ kit, miniAppDir, entry, outRoot: candidate })
