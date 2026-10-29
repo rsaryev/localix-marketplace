@@ -8,13 +8,13 @@ import { LoadingHint } from '@localixai/kit/empty-hint'
 import { StateNotice } from '@localixai/kit/state-notice'
 import { OpponentMenu } from '@localixai/kit/opponent-menu'
 import { GameControlRow } from '@localixai/kit/game-status'
+import { useNow } from '@localixai/mini-app-sdk/ui/now'
 
 import { owesAgentShot } from '../shared/game'
 import { gameMessageContext } from './bindings'
 import { Boards } from './game/Boards'
 import { GameOver, TurnProblem, TurnStatus } from './game/TurnPanel'
 import { useGame } from './game/useGame'
-import { useNow } from './useNow'
 
 /**
  * This chat's table: a status row, then the two boards side by side, filling the rest of the pane

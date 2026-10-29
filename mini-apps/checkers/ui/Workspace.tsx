@@ -8,6 +8,7 @@ import { LoadingHint } from '@localixai/kit/empty-hint'
 import { StateNotice } from '@localixai/kit/state-notice'
 import { OpponentMenu } from '@localixai/kit/opponent-menu'
 import { GameControlRow } from '@localixai/kit/game-status'
+import { useNow } from '@localixai/mini-app-sdk/ui/now'
 
 import { gameMessageContext } from './bindings'
 import { Board } from './game/Board'
@@ -15,7 +16,6 @@ import { GameOver, TurnProblem, TurnStatus } from './game/TurnPanel'
 import { owesAgentMove } from '../shared/game'
 import { other } from '../shared/rules'
 import { useGame } from './game/useGame'
-import { useNow } from './useNow'
 
 /**
  * This chat's table: a compact control row, the board, and the result over it.

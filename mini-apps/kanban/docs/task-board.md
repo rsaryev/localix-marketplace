@@ -69,10 +69,10 @@ it back to `ready`, so its new owner can `take` it.
 
 ### Cards for you
 
-The board's directory lists you as `human`. A card assigned to `human` waits for you: the board
-shows it with a person icon and "you (@human)", and assigning it raises a mention notification (and
-the `onHumanAssigned` mini app hook). Agents cannot `take` or `complete` such a card; the tool
-answers "LX-n is for @human; it waits for the person." Move your own cards on the board as usual.
+A card assigned to `user` (the agent passes `agent: "user"`) waits for you: the board shows it
+with a person icon and "you", and assigning it raises a mention notification (and the
+`onHumanAssigned` mini app hook). Agents cannot `take` or `complete` such a card; the tool answers
+"LX-n is assigned to the person; it waits for them." Move your own cards on the board as usual.
 
 Each workflow move has one action. `update` changes a card's text, owner, epic, priority,
 dependencies and checklist, and moves it only to `backlog`, `ready` or `cancelled`: `in_progress` is

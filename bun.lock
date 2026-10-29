@@ -68,7 +68,7 @@
     },
     "mini-apps/devops": {
       "name": "@localix-mini-app/devops",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "dependencies": {
         "@iconify-icons/vscode-icons": "^2.0.19",
         "@kubernetes/client-node": "^2.0.1",
@@ -88,7 +88,6 @@
       "dependencies": {
         "docx": "^9.13.0",
         "fontkit": "^2.0.4",
-        "hono": "^4.12.30",
         "mammoth": "^1.13.0",
         "officeparser": "^8.2.0",
         "pdfkit": "^0.20.2",
@@ -139,7 +138,7 @@
     },
     "mini-apps/reader": {
       "name": "@localix-mini-app/reader",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "dependencies": {
         "@thednp/dommatrix": "^3.1.2",
         "@xmldom/xmldom": "^0.9.12",
@@ -186,7 +185,7 @@
     },
     "plugins/mini-app-authoring": {
       "name": "mini-app-authoring",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "devDependencies": {
         "@types/bun": "1.4.3",
         "typescript": "^7.0.2",

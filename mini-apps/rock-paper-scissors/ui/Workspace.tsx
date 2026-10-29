@@ -7,6 +7,7 @@ import { LoadingHint } from '@localixai/kit/empty-hint'
 import { StateNotice } from '@localixai/kit/state-notice'
 import { OpponentMenu } from '@localixai/kit/opponent-menu'
 import { GameControlRow } from '@localixai/kit/game-status'
+import { useNow } from '@localixai/mini-app-sdk/ui/now'
 
 import { theirMove, viewerMayMove, viewOwesAgentMove, type Outcome } from '../shared/game'
 import { gameMessageContext } from './bindings'
@@ -17,7 +18,6 @@ import { Scoreboard } from './game/Scoreboard'
 import { TurnProblem, TurnStatus } from './game/TurnStatus'
 import { useGame } from './game/useGame'
 import { useVerified } from './game/useVerified'
-import { useNow } from './useNow'
 import './game/table.css'
 
 /**
