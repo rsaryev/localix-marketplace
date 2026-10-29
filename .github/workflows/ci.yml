@@ -41,7 +41,9 @@ jobs:
         with:
           bun-version-file: .bun-version
       - run: bun install --frozen-lockfile
-      - name: Pack the catalog
+      - name: Pack and sign the catalog
+        env:
+          MINI_APP_SIGNING_KEY: ${{ secrets.MINI_APP_SIGNING_KEY }}
         run: bun run pack
       - name: Release
         env:

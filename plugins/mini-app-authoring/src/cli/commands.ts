@@ -22,6 +22,7 @@ import { MINI_APP_NAME_RE, scaffoldMiniApp, toMiniAppName } from '../scaffold/sc
 import { stringOption } from './args'
 import { type CliContext, type Command, folder, readManifest } from './context'
 import { kitInfo, sayContractDiffers } from './kit-command'
+import { keygen, signCommand } from './signing-commands'
 
 export type { CliContext } from './context'
 
@@ -249,6 +250,8 @@ export const HELP = `mini-app — create, check, build, install and share Locali
   mini-app validate <package folder | .tar.gz> [--json]
   mini-app icon [folder] --glyph '<path …/>' [--tint #hex]   draw the app's icon from a 24×24 glyph
   mini-app ci [folder] [--publisher "…"]   release it from GitHub: a workflow that checks and releases tags
+  mini-app keygen                        make your signing key, once (kept in ~/.config/localix)
+  mini-app sign [catalog folder]         sign a packed catalog: MINI_APP_SIGNING_KEY, else your key
   mini-app contract                      the SDK contract a mini app is written against
   mini-app kit [folder] [--update [--version <v>|latest]]   the kit the app builds with; --update installs a release's
   mini-app get-localix                   install the latest Localix (verified) and open it
@@ -266,6 +269,8 @@ export const COMMANDS: Record<string, Command> = {
   validate,
   icon,
   ci,
+  keygen,
+  sign: signCommand,
   contract,
   kit: kitInfo,
   'get-localix': getLocalixCommand,

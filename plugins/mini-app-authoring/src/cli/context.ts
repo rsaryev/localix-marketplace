@@ -26,6 +26,9 @@ export interface CliContext {
   runTests?: TestRunner
   localix?: InstallDeps
   installer?: GetLocalixDeps
+  /** The environment and home folder the signing key is found by; the process's by default. */
+  env?: Record<string, string | undefined>
+  home?: string
 }
 
 export type Command = (args: ParsedArgs, context: CliContext) => Promise<number>

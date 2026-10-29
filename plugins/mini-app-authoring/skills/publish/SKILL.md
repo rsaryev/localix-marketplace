@@ -59,6 +59,12 @@ yourself and name it at the end. Ask the person one thing only: the confirmation
      `gh repo create <name> --public --source <folder> --push --description "<description>"`
    - Later releases: `git -C <folder> push`.
 
+   Then make sure the release is signed: Localix updates an app on its own only from a signed
+   catalog. If `gh secret list --repo <owner>/<repo>` has no `MINI_APP_SIGNING_KEY`, run
+   `mini-app keygen` (it makes the person's key once, in their config folder, and names the file)
+   and `gh secret set MINI_APP_SIGNING_KEY --repo <owner>/<repo> < <key file>`. One key signs every
+   app the person publishes; never copy it into the app's folder or print it.
+
    Then tag the version: `git -C <folder> tag v<version> && git -C <folder> push origin v<version>`.
 
 6. **Watch the release.** Wait for the tag's run:
@@ -79,7 +85,8 @@ yourself and name it at the end. Ask the person one thing only: the confirmation
 ## Without GitHub
 
 Run `mini-app pack <folder> --publisher "<name>"`. It checks and builds the app into
-`<folder>/dist/catalog`. Say that every file there goes into one HTTPS folder, and that
+`<folder>/dist/catalog`; then `mini-app keygen` (once) and `mini-app sign <folder>/dist/catalog`
+sign it. Say that every file there goes into one HTTPS folder, and that
 `/mini-app-authoring:publish` with the GitHub CLI signed in (`gh auth login`) does all of this,
 updates included.
 
@@ -87,7 +94,10 @@ updates included.
 
 - A catalog's publisher shows as unverified; only the hosted Localix catalog verifies publishers.
   Installing from an unverified publisher asks **Install anyway?**.
-- Installed copies take a newer version within six hours, or at once with Update. The next release
-  is a raised `version`, a commit, and a tag `v<version>`: GitHub builds the rest.
+- Installed copies of a signed app take a newer version within six hours, or at once with Update;
+  each person can turn that off on the app's page. An unsigned app updates only with Update.
+- Keep the signing key: if it changes, Localix shows **Signature changed** and installs nothing from
+  the catalog until people remove it and add it again. The next release is a raised `version`, a
+  commit, and a tag `v<version>`: GitHub builds the rest.
 - After updating Localix, run `mini-app ci` again: the workflow then builds with the new release.
 - Raising `apiVersion` in `mini-app.json` makes an older Localix list the app as needing an update.

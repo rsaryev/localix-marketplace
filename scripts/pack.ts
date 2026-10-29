@@ -40,3 +40,13 @@ const picks = JSON.parse(readFileSync(join(MINI_APPS, 'catalog-picks.json'), 'ut
 const catalog = withCatalogPicks(JSON.parse(readFileSync(catalogFile, 'utf8')), picks)
 writeFileSync(catalogFile, `${JSON.stringify(catalog, null, 2)}\n`)
 console.log(`\nPacked ${apps.length} mini apps into ${OUT.replace(`${ROOT}/`, '')}.`)
+
+// Localix keeps this catalog's public key in its code: its apps update on their own only while
+// every release is signed with the matching private key, the MINI_APP_SIGNING_KEY secret.
+if (process.env.MINI_APP_SIGNING_KEY?.trim()) {
+  const sign = Bun.spawnSync([TOOL, 'sign', OUT], { env, stdout: 'inherit', stderr: 'inherit' })
+  if (sign.exitCode !== 0) process.exit(sign.exitCode)
+} else if (process.env.CI) {
+  console.error('MINI_APP_SIGNING_KEY is not set: a release of the Localix catalog is signed.')
+  process.exit(1)
+}

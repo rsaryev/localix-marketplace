@@ -100,6 +100,18 @@ jobs:
       - name: Check and pack
         if: \${{ ${onTag} }}
         run: ${tool} pack app --out catalog
+      # Localix updates the app on its own only from a signed catalog: \`mini-app keygen\`, then
+      # \`gh secret set MINI_APP_SIGNING_KEY\` with the key it made. Without it the release is unsigned.
+      - name: Sign the catalog
+        if: \${{ ${onTag} }}
+        env:
+          MINI_APP_SIGNING_KEY: \${{ secrets.MINI_APP_SIGNING_KEY }}
+        run: |
+          if [ -z "$MINI_APP_SIGNING_KEY" ]; then
+            echo "::notice::The catalog is not signed: Localix updates this app only when people choose Update. Run mini-app keygen and set the MINI_APP_SIGNING_KEY secret to sign it."
+          else
+            ${tool} sign catalog
+          fi
       - name: Release
         if: \${{ ${onTag} }}
         env:
