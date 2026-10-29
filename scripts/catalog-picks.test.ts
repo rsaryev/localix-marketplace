@@ -1,4 +1,6 @@
 import { expect, test } from 'bun:test'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
 
 import { withCatalogPicks } from './catalog-picks'
 
@@ -48,4 +50,34 @@ test('a pick that names no app in the catalog stops the release', () => {
       collections: [{ id: 'play', title: 'Play', style: 'row', items: ['chesss'] }],
     }),
   ).toThrow('chesss')
+})
+
+test('what an app is for reaches its entry, so Localix recommends it beside those files', () => {
+  const catalog = { schema: 1, apps: [app('database'), app('chess')] }
+
+  const picked = withCatalogPicks(catalog, {
+    suits: { database: { files: ['*.sql'], dependencies: ['pg'] } },
+  })
+
+  expect(picked.apps[0]).toMatchObject({ suits: { files: ['*.sql'], dependencies: ['pg'] } })
+  expect(picked.apps[1]).not.toHaveProperty('suits')
+})
+
+test('what an app is for, said of an app the catalog does not have or not as names, stops the release', () => {
+  const catalog = { schema: 1, apps: [app('database')] }
+  expect(() => withCatalogPicks(catalog, { suits: { databse: { files: ['*.sql'] } } })).toThrow(
+    'databse',
+  )
+  expect(() =>
+    withCatalogPicks(catalog, { suits: { database: { files: '*.sql' } } } as never),
+  ).toThrow('database')
+  expect(() => withCatalogPicks(catalog, { suits: { database: {} } })).toThrow('database')
+})
+
+test('this repository’s picks name only its own apps and read, so a typo fails here, not at release', () => {
+  const dir = join(import.meta.dir, '..', 'mini-apps')
+  const names = readdirSync(dir).filter((name) => existsSync(join(dir, name, 'mini-app.json')))
+  const picks = JSON.parse(readFileSync(join(dir, 'catalog-picks.json'), 'utf8'))
+
+  expect(() => withCatalogPicks({ schema: 1, apps: names.map(app) }, picks)).not.toThrow()
 })

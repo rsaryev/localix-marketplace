@@ -9,8 +9,11 @@ screens (`ui/`). It holds no `skills/`, `.claude-plugin/` or hooks; see
 Localix ships none of them. A tag `v*` of this repository releases them as one catalog,
 `mini-app-catalog.json` (`bun run pack`), which Localix trusts: they install from its Store (**Mini
 apps**) like any other, and the store features and recommends the ones
-[`catalog-picks.json`](catalog-picks.json) names. Each app's guide for people using it is in its
-`docs/` folder; [games](../docs/games.md) and the [recipes](../docs/recipes/) span several.
+[`catalog-picks.json`](catalog-picks.json) names. Its `suits` says what each app is for — file names
+(`*.sql`, `compose.yaml`; `*` stands for any characters) and packages a project depends on (`pg`) —
+and Localix recommends the app when one of them is open or in the project; a name there that is not
+an app here fails the scripts' tests. Each app's guide for people using it is in its `docs/` folder;
+[games](../docs/games.md) and the [recipes](../docs/recipes/) span several.
 
 ## Workbenches
 

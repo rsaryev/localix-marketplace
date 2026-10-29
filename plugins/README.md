@@ -22,6 +22,10 @@ claude plugin marketplace add rsaryev/localix-marketplace
 claude plugin install mini-app-authoring@localix
 ```
 
+Under `metadata.localix` the marketplace also says what Localix's Store does with them:
+`recommended`, `collections`, and `suits` — by plugin name, the files and dependencies a project has
+when the plugin is worth recommending (`mini-app.json` for `mini-app-authoring`).
+
 A change reaches people when they update the plugin, so raise its `version` with each change.
 
 ## Add one

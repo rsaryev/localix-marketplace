@@ -24,5 +24,83 @@
         "plugin:duckdb-skills@claude-plugins-official"
       ]
     }
-  ]
+  ],
+  "suits": {
+    "database": {
+      "files": ["*.sql", "*.sqlite", "*.sqlite3", "*.db"],
+      "dependencies": [
+        "pg",
+        "postgres",
+        "mysql2",
+        "mysql",
+        "better-sqlite3",
+        "sqlite3",
+        "mssql",
+        "tedious",
+        "mongodb",
+        "mongoose",
+        "redis",
+        "ioredis",
+        "@elastic/elasticsearch",
+        "prisma",
+        "@prisma/client",
+        "drizzle-orm",
+        "kysely",
+        "typeorm",
+        "sequelize",
+        "knex"
+      ]
+    },
+    "devops": {
+      "files": [
+        "Dockerfile",
+        "*.dockerfile",
+        "compose.yaml",
+        "compose.yml",
+        "docker-compose.yaml",
+        "docker-compose.yml",
+        "Chart.yaml",
+        "kustomization.yaml",
+        "kustomization.yml",
+        "skaffold.yaml"
+      ],
+      "dependencies": ["dockerode", "@kubernetes/client-node"]
+    },
+    "api": {
+      "files": [
+        "*.http",
+        "*.rest",
+        "openapi.yaml",
+        "openapi.yml",
+        "openapi.json",
+        "swagger.yaml",
+        "swagger.json",
+        "*.postman_collection.json",
+        "*.har",
+        "*.request.json"
+      ],
+      "dependencies": ["express", "fastify", "hono", "koa", "@nestjs/core", "elysia"]
+    },
+    "documents": {
+      "files": [
+        "*.docx",
+        "*.doc",
+        "*.odt",
+        "*.pptx",
+        "*.xlsx",
+        "*.xls",
+        "*.xlsm",
+        "*.xlsb",
+        "*.csv",
+        "*.pdf"
+      ],
+      "dependencies": ["exceljs", "xlsx", "docx", "pptxgenjs", "pdf-lib", "pdfkit"]
+    },
+    "reader": {
+      "files": ["*.epub", "*.mobi", "*.azw3", "*.fb2", "*.cbz"]
+    },
+    "learning": {
+      "files": ["course.json", "*.localix-course"]
+    }
+  }
 }

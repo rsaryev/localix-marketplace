@@ -15,7 +15,13 @@
           "style": "row",
           "items": ["mini-app-authoring", "mini-app:code-graph", "mini-app:api"]
         }
-      ]
+      ],
+      "suits": {
+        "mini-app-authoring": {
+          "files": ["mini-app.json"],
+          "dependencies": ["@localixai/mini-app-sdk", "@localixai/kit"]
+        }
+      }
     }
   },
   "plugins": [
