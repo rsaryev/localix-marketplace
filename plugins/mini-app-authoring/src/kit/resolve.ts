@@ -49,6 +49,8 @@ export interface KitSource {
   dir: string
   /** Where the kit came from, for the report. */
   from: 'named' | 'installed' | 'release'
+  /** Why this kit is not the one asked for (the running release had none), to tell the person. */
+  note?: string
 }
 
 export interface ResolveKitDeps {
@@ -160,22 +162,28 @@ export async function resolveKit(deps: ResolveKitDeps = {}): Promise<KitSource> 
   }
   const runtime =
     deps.runtime === undefined ? await findLocalix({ env, home, fetch: fetchImpl }) : deps.runtime
-  return { dir: await runningReleaseKit(runtime?.version, cacheRoot, fetchImpl), from: 'release' }
+  return runningReleaseKit(runtime?.version, cacheRoot, fetchImpl)
 }
 
-/** The running release's kit; the latest release's when it has none or cannot be read. */
+/** The running release's kit; the latest release's, said, when it has none or cannot be read. */
 async function runningReleaseKit(
   version: string | undefined,
   cacheRoot: string,
   fetchImpl: typeof fetch,
-): Promise<string> {
+): Promise<KitSource> {
   const pin = localixPin(version)
-  if (pin.ref === 'latest') return downloadKit(RELEASES, cacheRoot, fetchImpl)
+  if (pin.ref === 'latest') {
+    return { dir: await downloadKit(RELEASES, cacheRoot, fetchImpl), from: 'release' }
+  }
   try {
-    return await downloadKit(pin.kitReleases, cacheRoot, fetchImpl)
+    return { dir: await downloadKit(pin.kitReleases, cacheRoot, fetchImpl), from: 'release' }
   } catch (error) {
     if (!(error instanceof UserError)) throw error
-    return downloadKit(RELEASES, cacheRoot, fetchImpl)
+    return {
+      dir: await downloadKit(RELEASES, cacheRoot, fetchImpl),
+      from: 'release',
+      note: `the kit of Localix ${version} could not be read (${error.message}); building against the latest release's kit, so the app may need a newer Localix than the one running.`,
+    }
   }
 }
 

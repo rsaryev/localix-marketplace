@@ -70,6 +70,7 @@ if (import.meta.main) {
   const kit = memoBy(
     async (appDir) => {
       const found = await resolveKit({ near: [appDir, process.cwd()] })
+      if (found.note) process.stderr.write(`mini-app: ${found.note}\n`)
       const source = installs ? await kitInApp(found, appDir) : found
       return { source, kit: await loadKit(source.dir) }
     },
@@ -82,6 +83,7 @@ if (import.meta.main) {
       kit: (appDir) => kit(appDir ?? target),
       updateKit: async (appDir, version) => {
         const release = await resolveKit({ version: version ?? 'running' })
+        if (release.note) process.stderr.write(`mini-app: ${release.note}\n`)
         const source = { dir: await installKit(release.dir, appDir), from: 'installed' as const }
         return { source, kit: await loadKit(source.dir) }
       },

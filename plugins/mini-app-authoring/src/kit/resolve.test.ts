@@ -93,6 +93,9 @@ describe('resolveKit', () => {
     expect(asked.at(-1)).toBe(
       `https://github.com/rsaryev/localix/releases/latest/download/${KIT_ARCHIVE}`,
     )
+    // The app is then built for another Localix than the one running it: that is said.
+    expect(source.note).toContain('Localix 0.0.9')
+    expect(source.note).toContain('latest release')
   })
 
   test('a release asked for by name that has no kit is said, not swapped for the latest', async () => {

@@ -57,5 +57,5 @@ export async function installKit(kitDir: string, appDir: string): Promise<string
  */
 export async function kitInApp(source: KitSource, appDir: string): Promise<KitSource> {
   if (source.from !== 'release' || !existsSync(join(appDir, MINI_APP_MANIFEST))) return source
-  return { dir: await installKit(source.dir, appDir), from: 'installed' }
+  return { ...source, dir: await installKit(source.dir, appDir), from: 'installed' }
 }
