@@ -82,7 +82,9 @@ test('pane resizing and view switching preserve the rich editor, draft and scrol
       root.render(<Harness />)
       await turns()
     })
-    for (let attempt = 0; !host.querySelector('[role="textbox"]') && attempt < 300; attempt++)
+    // The editor loads on its own: wait for it however long a busy machine takes; the test's
+    // timeout is the limit.
+    while (!host.querySelector('[role="textbox"]'))
       await act(async () => {
         await turns()
       })

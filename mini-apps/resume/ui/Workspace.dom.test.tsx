@@ -89,11 +89,8 @@ test('workspace publishes saved section, labels rich drafts and clears inactive/
     })
     // The editor and its toolbar load separately: wait for what is asserted, not its neighbour.
     const toggle = () => host.querySelector<HTMLButtonElement>('button[aria-label="PDF preview"]')
-    for (
-      let attempt = 0;
-      (!host.querySelector('[role="textbox"]') || !toggle()) && attempt < 300;
-      attempt++
-    )
+    // Until both are there, however long a busy machine takes: the test's timeout is the limit.
+    while (!host.querySelector('[role="textbox"]') || !toggle())
       await act(async () => {
         await turns()
       })
