@@ -1,12 +1,10 @@
 import { promises as fs } from 'node:fs'
 import { join, relative, resolve } from 'node:path'
 
-import { checkMiniApp, formatCheck, MANIFEST_FILE, type TestRunner } from '../check/check'
-import type { Kit } from '../kit/kit'
-import type { KitSource } from '../kit/resolve'
+import { checkMiniApp, formatCheck, MANIFEST_FILE } from '../check/check'
 import { UserError } from '../lib/errors'
-import { getLocalix, type GetLocalixDeps } from '../localix/get-localix'
-import { installIntoLocalix, type InstallDeps } from '../localix/install'
+import { getLocalix } from '../localix/get-localix'
+import { installIntoLocalix } from '../localix/install'
 import { assemblePackage } from '../package/assemble'
 import { CATALOG_FILE, packIntoCatalog } from '../package/pack'
 import { formatVerdict, validatePackage } from '../package/validate'
@@ -21,34 +19,11 @@ import {
 import { drawIcon } from '../scaffold/icon'
 import { agentInstruction } from '../scaffold/prose'
 import { MINI_APP_NAME_RE, scaffoldMiniApp, toMiniAppName } from '../scaffold/scaffold'
-import { type ParsedArgs, stringOption } from './args'
+import { stringOption } from './args'
+import { type CliContext, type Command, folder, readManifest } from './context'
+import { kitInfo, sayContractDiffers } from './kit-command'
 
-/** What a command reaches outside itself; tests replace each part. */
-export interface CliContext {
-  cwd: string
-  out: (text: string) => void
-  /** The kit to build with, resolved on first use. */
-  kit: () => Promise<{ kit: Kit; source: KitSource }>
-  runTests?: TestRunner
-  localix?: InstallDeps
-  installer?: GetLocalixDeps
-}
-
-type Command = (args: ParsedArgs, context: CliContext) => Promise<number>
-
-const folder = (args: ParsedArgs, context: CliContext) =>
-  resolve(context.cwd, args.positional[0] ?? '.')
-
-async function readManifest(dir: string): Promise<Record<string, unknown>> {
-  try {
-    return JSON.parse(await fs.readFile(join(dir, MANIFEST_FILE), 'utf8')) as Record<
-      string,
-      unknown
-    >
-  } catch {
-    throw new UserError(`${dir} is not a mini app: it has no readable ${MANIFEST_FILE}.`)
-  }
-}
+export type { CliContext } from './context'
 
 /** Check, then assemble the package; null (with the report printed) when the check failed. */
 async function buildPackage(
@@ -65,6 +40,7 @@ async function buildPackage(
     ...(context.runTests ? { runTests: context.runTests } : {}),
   })
   context.out(formatCheck(name, report))
+  await sayContractDiffers(kit, context)
   if (!outputs) return null
   try {
     return { packageDir: await assemblePackage(dir, outputs), name }
@@ -94,17 +70,19 @@ const create: Command = async (args, context) => {
       : {}),
   })
   context.out(`Created ${created.displayName} (${name}) at ${dir}.`)
+  // The new app keeps its own kit, which the agent then reads in the app's folder.
+  const { kit: appKit } = await context.kit(dir)
   if (args.options['no-check'] !== true) {
     // The fresh copy is checked once, so the agent starts from a mini app known to build.
     const { report } = await checkMiniApp({
-      kit,
+      kit: appKit,
       miniAppDir: dir,
       allowTemplateResidue: true,
       ...(context.runTests ? { runTests: context.runTests } : {}),
     })
     context.out(formatCheck(name, report, { freshCopy: true }))
   }
-  context.out(agentInstruction({ ...created, kit }))
+  context.out(agentInstruction({ ...created, kit: appKit }))
   return 0
 }
 
@@ -124,6 +102,7 @@ const check: Command = async (args, context) => {
       ? JSON.stringify(report, null, 2)
       : formatCheck(typeof manifest.name === 'string' ? manifest.name : dir, report),
   )
+  if (args.options.json !== true) await sayContractDiffers(kit, context)
   // The template passes with its own names in place; every other step still has to.
   const passed =
     args.options.template === true
@@ -250,18 +229,6 @@ const contract: Command = async (_args, context) => {
   return 0
 }
 
-const kitInfo: Command = async (_args, context) => {
-  const { kit, source } = await context.kit()
-  context.out(
-    [
-      `Kit: ${kit.dir} (from ${source.from})`,
-      `Localix: ${kit.manifest.localixVersion ?? 'unknown'}, mini app API ${kit.manifest.apiVersion ?? 'unknown'}`,
-      `Kit modules: ${kit.manifest.kitModules.length}`,
-    ].join('\n'),
-  )
-  return 0
-}
-
 const getLocalixCommand: Command = async (_args, context) => {
   const got = await getLocalix(context.installer)
   context.out(
@@ -283,11 +250,12 @@ export const HELP = `mini-app — create, check, build, install and share Locali
   mini-app icon [folder] --glyph '<path …/>' [--tint #hex]   draw the app's icon from a 24×24 glyph
   mini-app ci [folder] [--publisher "…"]   release it from GitHub: a workflow that checks and releases tags
   mini-app contract                      the SDK contract a mini app is written against
-  mini-app kit                           which mini app kit the commands build with
+  mini-app kit [folder] [--update [--version <v>|latest]]   the kit the app builds with; --update installs a release's
   mini-app get-localix                   install the latest Localix (verified) and open it
 
-The folder defaults to the current one. The kit comes from MINI_APP_KIT, the running Localix, the
-installed Localix app, or the latest Localix release.`
+The folder defaults to the current one. The kit comes from MINI_APP_KIT, else the one installed in
+the app's node_modules, else the running Localix's release (the latest one without it), which is
+downloaded, verified and installed into the app.`
 
 export const COMMANDS: Record<string, Command> = {
   create,

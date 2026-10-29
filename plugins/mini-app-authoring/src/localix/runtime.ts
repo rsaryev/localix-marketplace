@@ -8,11 +8,16 @@ import { UserError } from '../lib/errors'
  * Finding a running Localix and talking to it. The toolchain never reads Localix's own files beyond
  * the one it publishes for this: the API writes `<database>.api-runtime.json` (`baseUrl`, `pid`)
  * while it runs, and answers `GET /health` with its product id, so a stale file or another program
- * on the port is told apart from Localix.
+ * on the port is told apart from Localix, and with its release, so a mini app builds against that
+ * release's kit.
  */
 
 export interface LocalixRuntime {
   baseUrl: string
+  /** The Localix release running; absent when it runs from source. */
+  version?: string
+  /** The digest of the mini app contract it implements (`contract.ts`), release or not. */
+  miniAppContract?: string
 }
 
 export interface RuntimeDeps {
@@ -28,16 +33,29 @@ function runtimeFiles(env: Record<string, string | undefined>, home: string): st
   return [`${resolve(database)}.api-runtime.json`]
 }
 
-async function answersAsLocalix(baseUrl: string, fetchImpl: typeof fetch): Promise<boolean> {
+/** The Localix answering at `baseUrl`, or null when nothing or something else does. */
+async function localixAt(baseUrl: string, fetchImpl: typeof fetch): Promise<LocalixRuntime | null> {
   try {
     const response = await fetchImpl(new URL('/health', baseUrl), {
       signal: AbortSignal.timeout(2_000),
     })
-    if (!response.ok) return false
-    const body = (await response.json()) as { productId?: unknown }
-    return body.productId === PRODUCT_ID
+    if (!response.ok) return null
+    const body = (await response.json()) as {
+      productId?: unknown
+      version?: unknown
+      miniAppContract?: unknown
+    }
+    if (body.productId !== PRODUCT_ID) return null
+    const text = (value: unknown) => (typeof value === 'string' && value ? value : undefined)
+    const version = text(body.version)
+    const miniAppContract = text(body.miniAppContract)
+    return {
+      baseUrl,
+      ...(version ? { version } : {}),
+      ...(miniAppContract ? { miniAppContract } : {}),
+    }
   } catch {
-    return false
+    return null
   }
 }
 
@@ -56,7 +74,8 @@ export async function findLocalix(deps: RuntimeDeps = {}): Promise<LocalixRuntim
     }
   }
   for (const baseUrl of candidates) {
-    if (await answersAsLocalix(baseUrl, fetchImpl)) return { baseUrl }
+    const runtime = await localixAt(baseUrl, fetchImpl)
+    if (runtime) return runtime
   }
   return null
 }

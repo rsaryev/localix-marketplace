@@ -1,7 +1,7 @@
 import { promises as fs } from 'node:fs'
 import { join } from 'node:path'
 
-import { LOCALIX_REPO } from '../kit/resolve'
+import { type LocalixPin, localixPin } from '../kit/resolve'
 
 /**
  * Publishing through GitHub: the mini app's repository carries its source, and a workflow builds and
@@ -31,25 +31,8 @@ export const GENERATED_IGNORES = [
   'KIT.md',
 ]
 
-const RELEASE_VERSION = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u
-
 /** The marketplace this plugin is published in: the workflow checks the toolchain out of it. */
 export const MARKETPLACE_REPO = 'rsaryev/localix-marketplace'
-
-export interface LocalixPin {
-  /** The Localix release the kit comes from (`v<version>`), or `latest`. */
-  ref: string
-  /** The release folder the kit is downloaded from (`MINI_APP_KIT_RELEASES`). */
-  kitReleases: string
-}
-
-/** The Localix release a kit belongs to, or the latest one for a build no release carries. */
-export function localixPin(localixVersion: string | undefined): LocalixPin {
-  const releases = `https://github.com/${LOCALIX_REPO}/releases`
-  return localixVersion && RELEASE_VERSION.test(localixVersion)
-    ? { ref: `v${localixVersion}`, kitReleases: `${releases}/download/v${localixVersion}` }
-    : { ref: 'latest', kitReleases: `${releases}/latest/download` }
-}
 
 /** Add what `GENERATED_IGNORES` lacks to the mini app's `.gitignore`; the lines it added. */
 export async function ensureGitignore(dir: string): Promise<string[]> {

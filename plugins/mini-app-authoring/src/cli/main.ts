@@ -1,5 +1,9 @@
+import { resolve } from 'node:path'
+
+import { installKit, kitInApp } from '../kit/install-kit'
 import { loadKit } from '../kit/kit'
 import { resolveKit } from '../kit/resolve'
+import { findLocalix } from '../localix/runtime'
 import { errorMessage, UserError } from '../lib/errors'
 import { postEdit } from '../hook/post-edit'
 import { parseArgs } from './args'
@@ -26,9 +30,26 @@ export async function runCli(argv: readonly string[], context: CliContext): Prom
   }
 }
 
-function memo<T>(load: () => Promise<T>): () => Promise<T> {
-  let value: Promise<T> | null = null
-  return () => (value ??= load())
+/**
+ * One load per key while it holds: a command asks for its app's kit more than once. A load `keep`
+ * rejects is done again next time: `create` asks before the app exists, and again once it does.
+ */
+function memoBy<T>(
+  load: (key: string) => Promise<T>,
+  keep: (value: T) => boolean,
+): (key: string) => Promise<T> {
+  const values = new Map<string, Promise<T>>()
+  return (key) => {
+    const known = values.get(key)
+    if (known) return known
+    const value = load(key)
+    values.set(key, value)
+    value.then(
+      (loaded) => keep(loaded) || values.delete(key),
+      () => values.delete(key),
+    )
+    return value
+  }
 }
 
 if (import.meta.main) {
@@ -41,18 +62,30 @@ if (import.meta.main) {
     if (output) process.stdout.write(`${output}\n`)
     process.exit(0)
   }
-  // The app a command names (its first plain argument) and the working directory: a kit installed
-  // above either is the one this repository pinned.
-  const near = [...argv.slice(1).filter((arg) => !arg.startsWith('-')).slice(0, 1), process.cwd()]
-  const kit = memo(async () => {
-    const source = await resolveKit({ near })
-    return { source, kit: await loadKit(source.dir) }
-  })
+  // The app a command names (its first plain argument), else the working directory: its own kit,
+  // or one installed above it (a repository that pins one), is the one it builds with.
+  const target = resolve(argv.slice(1).find((arg) => !arg.startsWith('-')) ?? '.')
+  // `validate` judges a built package, which must stay as it was built.
+  const installs = argv[0] !== 'validate'
+  const kit = memoBy(
+    async (appDir) => {
+      const found = await resolveKit({ near: [appDir, process.cwd()] })
+      const source = installs ? await kitInApp(found, appDir) : found
+      return { source, kit: await loadKit(source.dir) }
+    },
+    ({ source }) => !installs || source.from !== 'release',
+  )
   try {
     process.exitCode = await runCli(argv, {
       cwd: process.cwd(),
       out: (text) => process.stdout.write(`${text}\n`),
-      kit,
+      kit: (appDir) => kit(appDir ?? target),
+      updateKit: async (appDir, version) => {
+        const release = await resolveKit({ version: version ?? 'running' })
+        const source = { dir: await installKit(release.dir, appDir), from: 'installed' as const }
+        return { source, kit: await loadKit(source.dir) }
+      },
+      runningLocalix: () => findLocalix(),
     })
   } catch (error) {
     process.stderr.write(`mini-app: ${errorMessage(error)}\n`)

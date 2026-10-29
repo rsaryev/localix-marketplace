@@ -1,0 +1,40 @@
+name: Against Localix main
+
+# Every night, and on demand: every mini app checked against the kit of Localix's main branch, so a
+# change there that would break them is seen before a release — where Localix's release stops on
+# the same check (`mini-apps-against-kit`).
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: rsaryev/localix
+          ref: main
+          path: localix
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+      - name: The kit of Localix main
+        working-directory: localix
+        run: |
+          bun install --frozen-lockfile
+          bunx turbo build --filter=@localixai/api
+          bun run mini-app-kit
+      - name: Mini apps
+        env:
+          MINI_APP_KIT: ${{ github.workspace }}/localix/.turbo/mini-app-kit
+        run: |
+          bun install --frozen-lockfile
+          bun run check mini-apps

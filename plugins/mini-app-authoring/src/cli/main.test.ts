@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
+import { PLUGIN_TEMPLATE } from '../kit/kit'
 import { fakeKit } from '../testing/fake-kit'
 import { tempDirPerTest, writeTree } from '../testing/temp'
 import type { CliContext } from './commands'
@@ -79,6 +80,93 @@ describe('mini-app', () => {
     const { context, output } = cli()
     expect(await runCli(['kit'], context)).toBe(0)
     expect(output()).toContain('Kit: /kit (from named)')
+  })
+
+  test('kit says when the running Localix is newer than the kit the app builds against', async () => {
+    const { context, output } = cli()
+    const kit = fakeKit()
+    kit.manifest.localixVersion = '0.4.0'
+    context.kit = async () => ({ kit, source: { dir: '/app/kit', from: 'installed' } })
+    context.runningLocalix = async () => ({ baseUrl: 'http://127.0.0.1:5051', version: '0.5.0' })
+    expect(await runCli(['kit'], context)).toBe(0)
+    expect(output()).toContain('Localix 0.5.0 is running; this app builds against 0.4.0')
+    expect(output()).toContain('mini-app kit --update')
+  })
+
+  test('kit says when the app’s kit is exactly the running Localix’s contract', async () => {
+    const { context, output } = cli()
+    const kit = fakeKit()
+    kit.manifest.contract = 'c'.repeat(64)
+    context.kit = async () => ({ kit, source: { dir: '/app/kit', from: 'installed' } })
+    context.runningLocalix = async () => ({
+      baseUrl: 'http://127.0.0.1:5051',
+      miniAppContract: 'c'.repeat(64),
+    })
+    expect(await runCli(['kit'], context)).toBe(0)
+    expect(output()).toContain('matches the running Localix exactly')
+  })
+
+  // A development Localix implements a contract no release's kit carries.
+  test('kit --update says how to build against a checkout when no release matches', async () => {
+    const dir = tempDir()
+    writeTree(dir, { 'mini-app.json': '{"name":"meal-log"}' })
+    const { context, output } = cli(dir)
+    context.updateKit = async (appDir) => {
+      const kit = fakeKit()
+      kit.manifest.localixVersion = '0.5.0'
+      kit.manifest.contract = 'a'.repeat(64)
+      return { kit, source: { dir: `${appDir}/kit`, from: 'installed' } }
+    }
+    context.runningLocalix = async () => ({
+      baseUrl: 'http://127.0.0.1:5051',
+      miniAppContract: 'b'.repeat(64),
+    })
+    expect(await runCli(['kit', '--update'], context)).toBe(0)
+    expect(output()).toContain('bun run mini-app-kit')
+    expect(output()).toContain('MINI_APP_KIT=<localix checkout>/.turbo/mini-app-kit')
+    // A release asked for by name is what was wanted, whatever runs.
+    const before = output().length
+    expect(await runCli(['kit', '--update', '--version', '0.4.0'], context)).toBe(0)
+    expect(output().slice(before)).not.toContain('MINI_APP_KIT=')
+  })
+
+  test('kit --update installs a release’s kit into the app', async () => {
+    const dir = tempDir()
+    writeTree(dir, { 'mini-app.json': '{"name":"meal-log"}' })
+    const { context, output } = cli(dir)
+    const asked: unknown[] = []
+    context.updateKit = async (appDir, version) => {
+      asked.push({ appDir, version })
+      const kit = fakeKit()
+      kit.manifest.localixVersion = '0.5.0'
+      return {
+        kit,
+        source: { dir: `${appDir}/node_modules/@localixai/mini-app-kit`, from: 'installed' },
+      }
+    }
+    expect(await runCli(['kit', '--update'], context)).toBe(0)
+    expect(await runCli(['kit', '.', '--update', '--version', '0.4.0'], context)).toBe(0)
+    expect(asked).toEqual([
+      { appDir: dir, version: undefined },
+      { appDir: dir, version: '0.4.0' },
+    ])
+    expect(output()).toContain('now builds against Localix 0.5.0')
+  })
+
+  // The new app keeps its own kit, so the agent reads the SDK from the app's folder.
+  test('create puts the kit into the new app and builds with that one', async () => {
+    const cwd = tempDir()
+    const { context } = cli(cwd)
+    const asked: (string | undefined)[] = []
+    context.kit = async (appDir) => {
+      asked.push(appDir)
+      const kit = fakeKit()
+      kit.templateDir = PLUGIN_TEMPLATE
+      kit.manifest.apiVersion = 2
+      return { kit, source: { dir: '/kit', from: appDir ? 'installed' : 'release' } }
+    }
+    expect(await runCli(['create', 'meal-log', '--no-check'], context)).toBe(0)
+    expect(asked).toEqual([undefined, `${cwd}/meal-log`])
   })
 
   // Skills inject it with a shell command, so it must answer where no kit can be found.

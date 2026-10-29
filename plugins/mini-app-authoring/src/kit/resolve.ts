@@ -5,25 +5,22 @@ import { dirname, join, resolve } from 'node:path'
 
 import { UserError } from '../lib/errors'
 import { isPathBelow } from '../lib/paths'
-import {
-  findLocalix,
-  installedLocalixApp,
-  localixRequest,
-  type LocalixRuntime,
-} from '../localix/runtime'
+import { findLocalix, type LocalixRuntime } from '../localix/runtime'
+import { INSTALLED_KIT } from './install-kit'
 import { KIT_MANIFEST } from './kit'
 
 /**
- * Which kit to build with, in order of how exactly it matches the Localix the app will run in:
+ * Which kit to build with. Localix neither carries nor serves one: each release publishes its kit
+ * as `mini-app-kit.tar.gz`, and a mini app keeps the one it is built against in its own
+ * `node_modules`, like any development dependency (`install-kit.ts`). In order:
  *
- * 1. `MINI_APP_KIT` (or `--kit`): a kit someone named.
- * 1a. A kit installed as the package `@localixai/mini-app-kit` in a `node_modules` above the app
- *    (a repository that pins its kit, or `bun link`s one from a Localix checkout).
- * 2. The running Localix's own kit (`GET /rpc/mini-apps/kit`): exactly what will run the app.
- * 3. The kit inside an installed Localix app, when Localix is not running.
- * 4. The latest Localix release's kit, downloaded once, verified against the release's
- *    `SHA256SUMS.txt` and kept by its hash: so Claude Code without Localix can still create, build
- *    and share a mini app.
+ * 1. `MINI_APP_KIT` (or `--kit`): a kit someone named (one staged from a Localix checkout).
+ * 2. A kit installed as the package `@localixai/mini-app-kit` in a `node_modules` above the app:
+ *    the app's own, or a repository's that pins one.
+ * 3. A release's kit, downloaded once, verified against the release's `SHA256SUMS.txt` and kept by
+ *    its hash: the running Localix's release, so the app is built for exactly what will run it;
+ *    the latest release when Localix runs from source, is not running, or its release has no kit —
+ *    so Claude Code without Localix can still create, build and share a mini app.
  */
 
 export const KIT_ARCHIVE = 'mini-app-kit.tar.gz'
@@ -31,10 +28,27 @@ export const KIT_ARCHIVE = 'mini-app-kit.tar.gz'
 export const LOCALIX_REPO = 'rsaryev/localix'
 export const RELEASES = `https://github.com/${LOCALIX_REPO}/releases/latest/download`
 
+const RELEASE_VERSION = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u
+
+export interface LocalixPin {
+  /** The Localix release the kit comes from (`v<version>`), or `latest`. */
+  ref: string
+  /** The release folder the kit is downloaded from (`MINI_APP_KIT_RELEASES`). */
+  kitReleases: string
+}
+
+/** The Localix release a kit belongs to, or the latest one for a build no release carries. */
+export function localixPin(localixVersion: string | undefined): LocalixPin {
+  const releases = `https://github.com/${LOCALIX_REPO}/releases`
+  return localixVersion && RELEASE_VERSION.test(localixVersion)
+    ? { ref: `v${localixVersion}`, kitReleases: `${releases}/download/v${localixVersion}` }
+    : { ref: 'latest', kitReleases: RELEASES }
+}
+
 export interface KitSource {
   dir: string
   /** Where the kit came from, for the report. */
-  from: 'named' | 'installed' | 'localix' | 'app' | 'release'
+  from: 'named' | 'installed' | 'release'
 }
 
 export interface ResolveKitDeps {
@@ -43,8 +57,11 @@ export interface ResolveKitDeps {
   fetch?: typeof fetch
   /** The running Localix, when the caller already looked. */
   runtime?: LocalixRuntime | null
-  /** The installed app, when the caller already looked (tests pass null). */
-  app?: string | null
+  /**
+   * A release's kit, passing over an installed one (`mini-app kit --update`): a version, `latest`,
+   * or `running` for the running Localix's (the latest without it).
+   */
+  version?: string
   /** Folders to look above for an installed kit: the app's, then the working directory. */
   near?: readonly string[]
   /** Never download: fall back to the newest kit already downloaded (an edit hook must be quick). */
@@ -82,7 +99,7 @@ async function downloadKit(
     )
   }
   const expected = checksumOf(await sumsResponse.text(), KIT_ARCHIVE)
-  if (!expected) throw new UserError(`The latest Localix release publishes no ${KIT_ARCHIVE}.`)
+  if (!expected) throw new UserError(`The Localix release at ${base} publishes no ${KIT_ARCHIVE}.`)
   const dir = join(cacheRoot, expected.slice(0, 16))
   if (existsSync(join(dir, KIT_MANIFEST))) return dir
 
@@ -123,37 +140,44 @@ export async function resolveKit(deps: ResolveKitDeps = {}): Promise<KitSource> 
   const named = env.MINI_APP_KIT?.trim()
   if (named) return { dir: named, from: 'named' }
 
-  const installed = installedKit(deps.near ?? [])
-  if (installed) return { dir: installed, from: 'installed' }
-
-  const runtime =
-    deps.runtime === undefined ? await findLocalix({ env, home, fetch: fetchImpl }) : deps.runtime
-  // A Localix from before the toolchain moved out has no kit route, and its kit (like the installed
-  // app's, the same release) cannot build for this toolchain: the latest release's is used instead.
-  const running = runtime
-    ? await localixRequest<{ dir: string }>(runtime, '/rpc/mini-apps/kit', {}, fetchImpl).then(
-        ({ dir }) => dir,
-        () => null,
-      )
-    : undefined
-  if (running) return { dir: running, from: 'localix' }
-
-  if (running === undefined) {
-    const app = deps.app === undefined ? installedLocalixApp(home) : deps.app
-    const bundled = app && join(app, 'Contents', 'Resources', 'resources', 'mini-app-kit')
-    if (bundled && (await speaksAuthoring(bundled))) return { dir: bundled, from: 'app' }
+  if (deps.version === undefined) {
+    const installed = installedKit(deps.near ?? [])
+    if (installed) return { dir: installed, from: 'installed' }
   }
 
+  const cacheRoot = kitCacheRoot(env, home)
   if (deps.offline) {
-    const cached = await newestCachedKit(kitCacheRoot(env, home))
+    const cached = await newestCachedKit(cacheRoot)
     if (cached) return { dir: cached, from: 'release' }
     throw new UserError('No mini app kit on this computer yet; any mini-app command downloads one.')
   }
-  const base = env.MINI_APP_KIT_RELEASES?.trim() || RELEASES
-  return { dir: await downloadKit(base, kitCacheRoot(env, home), fetchImpl), from: 'release' }
+  const override = env.MINI_APP_KIT_RELEASES?.trim()
+  if (override) return { dir: await downloadKit(override, cacheRoot, fetchImpl), from: 'release' }
+  if (deps.version !== undefined && deps.version !== 'running') {
+    // A release asked for by name is that release or an error, never another one.
+    const { kitReleases } = localixPin(deps.version === 'latest' ? undefined : deps.version)
+    return { dir: await downloadKit(kitReleases, cacheRoot, fetchImpl), from: 'release' }
+  }
+  const runtime =
+    deps.runtime === undefined ? await findLocalix({ env, home, fetch: fetchImpl }) : deps.runtime
+  return { dir: await runningReleaseKit(runtime?.version, cacheRoot, fetchImpl), from: 'release' }
 }
 
-const INSTALLED_KIT = join('node_modules', '@localixai', 'mini-app-kit')
+/** The running release's kit; the latest release's when it has none or cannot be read. */
+async function runningReleaseKit(
+  version: string | undefined,
+  cacheRoot: string,
+  fetchImpl: typeof fetch,
+): Promise<string> {
+  const pin = localixPin(version)
+  if (pin.ref === 'latest') return downloadKit(RELEASES, cacheRoot, fetchImpl)
+  try {
+    return await downloadKit(pin.kitReleases, cacheRoot, fetchImpl)
+  } catch (error) {
+    if (!(error instanceof UserError)) throw error
+    return downloadKit(RELEASES, cacheRoot, fetchImpl)
+  }
+}
 
 /** The nearest `node_modules/@localixai/mini-app-kit` above any of `folders`, when there is one. */
 function installedKit(folders: readonly string[]): string | null {
@@ -168,16 +192,6 @@ function installedKit(folders: readonly string[]): string | null {
     }
   }
   return null
-}
-
-/** The kit at `dir` carries the authoring block this toolchain reads (an older app's does not). */
-async function speaksAuthoring(dir: string): Promise<boolean> {
-  try {
-    const manifest = JSON.parse(await fs.readFile(join(dir, KIT_MANIFEST), 'utf8'))
-    return typeof manifest?.authoring?.tools === 'string'
-  } catch {
-    return false
-  }
 }
 
 async function newestCachedKit(cacheRoot: string): Promise<string | null> {

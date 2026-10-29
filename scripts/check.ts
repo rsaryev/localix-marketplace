@@ -8,6 +8,9 @@ import { kitDir, ROOT } from './kit'
  * `mini-app check`: manifest, style, routes, store media, backend and UI builds, types and tests.
  * The template the authoring plugin copies is one of them.
  *
+ * `mini-apps` checks every mini app and nothing else: what a Localix release runs against the kit it is
+ * about to publish (`MINI_APP_KIT=<kit>`), where Claude Code is not installed.
+ *
  * Named `plugins`, or with nothing named, it first checks the plugins: the authoring plugin's
  * types and tests and this repository's scripts' tests, then Claude Code's validation — each plugin with `--strict`, the marketplace
  * without it, because its `metadata.localix` (Localix's recommendations and collections) is a field
@@ -17,7 +20,8 @@ const MINI_APPS = join(ROOT, 'mini-apps')
 const TEMPLATE = join(ROOT, 'plugins', 'mini-app-authoring', 'template')
 const TOOL = join(ROOT, 'plugins', 'mini-app-authoring', 'bin', 'mini-app')
 
-const named = process.argv.slice(2)
+const onlyMiniApps = process.argv.includes('mini-apps')
+const named = process.argv.slice(2).filter((name) => name !== 'mini-apps')
 const PLUGINS = join(ROOT, 'plugins')
 
 function step(cmd: string[], cwd = ROOT): boolean {
@@ -42,7 +46,7 @@ function checkPlugins(): boolean {
   ].every(Boolean)
 }
 
-if ((!named.length || named.includes('plugins')) && !checkPlugins()) {
+if (!onlyMiniApps && (!named.length || named.includes('plugins')) && !checkPlugins()) {
   console.error('\nThe plugins failed their checks.')
   process.exit(1)
 }

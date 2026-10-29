@@ -52,6 +52,11 @@ export interface KitManifest {
   apiVersion?: number
   /** The Localix version that staged the kit. */
   localixVersion?: string
+  /**
+   * The digest of the kit's `API.md`, the mini app contract its Localix implements (`contract.ts`).
+   * Absent from kits of releases before it.
+   */
+  contract?: string
   kitModules: string[]
   /** One line per core control — `<id>: <Export> { own props }`. */
   kitDigest?: string[]

@@ -3,7 +3,8 @@ import { promises as fs } from 'node:fs'
 import { join } from 'node:path'
 
 import { tempDirPerTest, writeTree } from '../testing/temp'
-import { ensureGitignore, localixPin, releaseWorkflow } from './ci'
+import { localixPin } from '../kit/resolve'
+import { ensureGitignore, releaseWorkflow } from './ci'
 
 const tempDir = tempDirPerTest('mini-app-ci-')
 

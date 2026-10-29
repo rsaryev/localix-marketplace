@@ -28,9 +28,9 @@ The request: $ARGUMENTS
    ```
 
    Add `--dir <folder>` to put it elsewhere. The command copies the reference mini app (Daily Log:
-   entries the agent logs, a goal, a chart) from the mini app kit of the person's Localix, checks
-   the copy, and prints the instruction for turning it into the requested app, with the whole SDK
-   contract.
+   entries the agent logs, a goal, a chart), installs the mini app kit of the person's Localix into
+   its `node_modules`, checks the copy, and prints the instruction for turning it into the requested
+   app, with the whole SDK contract.
 
 3. Follow that printed instruction in its order: read the patterns, decide the data and the screen,
    write `shared/model.ts` first, then the rest in one batch, test, draw the icon with

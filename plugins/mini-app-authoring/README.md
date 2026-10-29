@@ -38,11 +38,11 @@ mini-app ci [folder] [--publisher "…"]
 mini-app contract            mini-app kit                 mini-app get-localix
 ```
 
-A new app is a copy of the kit's reference app, Daily Log, whose plumbing — routes, storage, the
-feed that updates an open screen when the agent writes, semantic search — is the SDK's app layer
-(`createMiniApp`, `defineCollection`, `useCollection`, `screenUi`). `mini-app create` prints the
-whole contract with the instruction, so the agent writes only the domain and the screen;
-`mini-app contract` prints it again any time.
+A new app is a copy of this plugin's reference app, Daily Log (`template/`), whose plumbing —
+routes, storage, the feed that updates an open screen when the agent writes, semantic search — is
+the SDK's app layer (`createMiniApp`, `defineCollection`, `useCollection`, `screenUi`).
+`mini-app create` prints the whole contract with the instruction, so the agent writes only the
+domain and the screen; `mini-app contract` prints it again any time.
 
 ## Publishing from GitHub
 
@@ -60,10 +60,20 @@ Localix runs and manages mini apps: it installs, updates, enables and validates 
 this plugin's job. The two meet in two places:
 
 - **The mini app kit.** Each Localix release publishes the platform a mini app is built against —
-  the reference template, the SDK and UI kit declarations, the host theme, the modules the host
-  lends at runtime, and Localix's own validation rules. `mini-app` uses the running Localix's kit,
-  else the installed app's, else the latest release's `mini-app-kit.tar.gz` (verified against its
-  `SHA256SUMS.txt` and kept in the plugin's data folder). `MINI_APP_KIT=<folder>` names one.
+  the SDK and UI kit declarations, the host theme, the modules the host lends at runtime, and
+  Localix's own validation rules. Localix itself does not carry it: each mini app keeps the kit it
+  builds against in its own `node_modules/@localixai/mini-app-kit`, like any development dependency.
+  When an app has none, `mini-app` downloads the running Localix release's `mini-app-kit.tar.gz`
+  (the latest release's when Localix is not running, runs from source, or that release has none),
+  verifies it against the release's `SHA256SUMS.txt`, keeps it in the plugin's data folder and
+  installs it into the app. `mini-app kit` says which Localix the app builds against;
+  `mini-app kit --update [--version <v>]` installs another release's kit.
+  `MINI_APP_KIT=<folder>` names one, such as a kit staged from a Localix checkout. Each kit carries
+  the digest of the mini app contract it was staged with (`contract` in `kit.json`, the hash of its
+  `API.md`), and Localix reports the one it implements from `GET /health`: the same digest means
+  the kit matches that Localix exactly.
+  `mini-app kit` and `mini-app check` say when they differ — a notice, not a failure, since an app
+  built against an older Localix runs on a newer one.
 - **Installing.** `mini-app install` hands the built package to the running Localix
   (`POST /rpc/mini-apps/install-local`); Localix validates and installs it. A shared catalog is
   installed from Localix's mini app store like any other.

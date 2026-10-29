@@ -9,12 +9,19 @@ import { checksumOf, KIT_ARCHIVE, kitCacheRoot, resolveKit } from './resolve'
 const tempDir = tempDirPerTest('mini-app-kit-resolve-')
 const sha = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex')
 
-async function release(files: Record<string, string>, sumsFor?: Uint8Array) {
+/** Releases serving one kit; a URL containing any of `without` answers 404. */
+async function release(
+  files: Record<string, string>,
+  sumsFor?: Uint8Array,
+  without: readonly string[] = [],
+) {
   const archive = await new Bun.Archive(files, { compress: 'gzip' }).bytes()
   const sums = `${sha(sumsFor ?? archive)}  ${KIT_ARCHIVE}\n${'0'.repeat(64)}  Localix-macos-arm64.dmg\n`
   const asked: string[] = []
   const fetchImpl = (async (url: string | URL) => {
     asked.push(String(url))
+    if (without.some((part) => String(url).includes(part)))
+      return new Response('missing', { status: 404 })
     if (String(url).endsWith('/SHA256SUMS.txt')) return new Response(sums)
     if (String(url).endsWith(`/${KIT_ARCHIVE}`)) return new Response(archive)
     return new Response('missing', { status: 404 })
@@ -27,7 +34,6 @@ const offlineDeps = (home: string, fetchImpl: typeof fetch) => ({
   home,
   fetch: fetchImpl,
   runtime: null,
-  app: null,
 })
 
 describe('resolveKit', () => {
@@ -36,20 +42,20 @@ describe('resolveKit', () => {
     expect(source).toEqual({ dir: '/somewhere/kit', from: 'named' })
   })
 
-  // A repository that pins its kit (installed or `bun link`ed as `@localixai/mini-app-kit`) builds
-  // against that one, not against whatever older Localix happens to be running or installed.
-  test('a kit installed beside the app wins over a running or installed Localix', async () => {
+  // A mini app that has its kit installed (or a repository that pins one, or `bun link`s one)
+  // builds against that one, not against whatever Localix happens to be running.
+  test('a kit installed beside the app wins over the running Localix’s release', async () => {
     const repo = tempDir()
-    writeTree(join(repo, 'node_modules/@localixai/mini-app-kit'), {
-      'kit.json': '{"authoring":{"tools":"tools/authoring.js"}}',
-    })
+    writeTree(join(repo, 'node_modules/@localixai/mini-app-kit'), { 'kit.json': '{}' })
     const app = join(repo, 'mini-apps', 'chess')
     writeTree(app, { 'mini-app.json': '{}' })
-    const fetchImpl = (async () => Response.json({ dir: '/Localix/kit' })) as unknown as typeof fetch
+    const fetchImpl = (() => {
+      throw new Error('fetched')
+    }) as unknown as typeof fetch
     const source = await resolveKit({
       env: {},
       fetch: fetchImpl,
-      runtime: { baseUrl: 'http://127.0.0.1:5051' },
+      runtime: { baseUrl: 'http://127.0.0.1:5051', version: '0.4.0' },
       near: [app],
     })
     expect(source).toEqual({
@@ -58,43 +64,71 @@ describe('resolveKit', () => {
     })
   })
 
-  test('the running Localix answers with its own kit', async () => {
-    const fetchImpl = (async () =>
-      Response.json({ dir: '/Localix/kit' })) as unknown as typeof fetch
+  test('the running Localix’s release kit is the one downloaded', async () => {
+    const { fetchImpl, asked } = await release({ 'kit.json': '{"kitModules":[]}' })
     const source = await resolveKit({
       env: {},
+      home: tempDir(),
       fetch: fetchImpl,
-      runtime: { baseUrl: 'http://127.0.0.1:5051' },
+      runtime: { baseUrl: 'http://127.0.0.1:5051', version: '0.4.0' },
     })
-    expect(source).toEqual({ dir: '/Localix/kit', from: 'localix' })
+    expect(source.from).toBe('release')
+    expect(asked).toContain(
+      `https://github.com/rsaryev/localix/releases/download/v0.4.0/${KIT_ARCHIVE}`,
+    )
   })
 
-  test('the installed app’s kit is used when Localix is not running', async () => {
-    const app = join(tempDir(), 'Localix.app')
-    writeTree(join(app, 'Contents/Resources/resources/mini-app-kit'), {
-      'kit.json': '{"authoring":{"tools":"tools/authoring.js"}}',
+  // A release from before the kit was published, or one that cannot be read, still leaves a kit.
+  test('a release without the kit gives way to the latest one', async () => {
+    const { fetchImpl, asked } = await release({ 'kit.json': '{"kitModules":[]}' }, undefined, [
+      '/download/v0.0.9/',
+    ])
+    const source = await resolveKit({
+      env: {},
+      home: tempDir(),
+      fetch: fetchImpl,
+      runtime: { baseUrl: 'http://127.0.0.1:5051', version: '0.0.9' },
     })
-    const source = await resolveKit({ env: {}, runtime: null, app })
-    expect(source.from).toBe('app')
+    expect(source.from).toBe('release')
+    expect(asked.at(-1)).toBe(
+      `https://github.com/rsaryev/localix/releases/latest/download/${KIT_ARCHIVE}`,
+    )
   })
 
-  test('an older Localix, running or installed, gives way to the latest release kit', async () => {
-    const home = tempDir()
-    const app = join(home, 'Localix.app')
-    writeTree(join(app, 'Contents/Resources/resources/mini-app-kit'), { 'kit.json': '{}' })
-    const { fetchImpl } = await release({ 'kit.json': '{"kitModules":[]}' })
-    const notFound = (async (url: string | URL) =>
-      String(url).includes('/rpc/mini-apps/kit')
-        ? new Response('not found', { status: 404 })
-        : fetchImpl(url)) as unknown as typeof fetch
-    const running = await resolveKit({
-      ...offlineDeps(home, notFound),
-      runtime: { baseUrl: 'http://127.0.0.1:5051' },
-      app,
+  test('a release asked for by name that has no kit is said, not swapped for the latest', async () => {
+    const { fetchImpl } = await release({ 'kit.json': '{}' }, undefined, ['/download/v0.0.9/'])
+    await expect(
+      resolveKit({ env: {}, home: tempDir(), fetch: fetchImpl, runtime: null, version: '0.0.9' }),
+    ).rejects.toThrow('v0.0.9')
+  })
+
+  // `mini-app kit --update`: the app's installed kit is what is being replaced.
+  test('asked for the running release, the installed kit is passed over', async () => {
+    const app = tempDir()
+    writeTree(join(app, 'node_modules/@localixai/mini-app-kit'), { 'kit.json': '{}' })
+    const { fetchImpl, asked } = await release({ 'kit.json': '{"kitModules":[]}' })
+    const source = await resolveKit({
+      env: {},
+      home: tempDir(),
+      fetch: fetchImpl,
+      runtime: { baseUrl: 'http://127.0.0.1:5051', version: '0.4.0' },
+      near: [app],
+      version: 'running',
     })
-    expect(running.from).toBe('release')
-    const installed = await resolveKit({ ...offlineDeps(home, fetchImpl), app })
-    expect(installed.from).toBe('release')
+    expect(source.from).toBe('release')
+    expect(asked[0]).toBe(
+      'https://github.com/rsaryev/localix/releases/download/v0.4.0/SHA256SUMS.txt',
+    )
+  })
+
+  test('a Localix run from source, or none running, builds against the latest release', async () => {
+    for (const runtime of [{ baseUrl: 'http://127.0.0.1:5051' }, null]) {
+      const { fetchImpl, asked } = await release({ 'kit.json': '{"kitModules":[]}' })
+      await resolveKit({ env: {}, home: tempDir(), fetch: fetchImpl, runtime })
+      expect(asked[0]).toBe(
+        'https://github.com/rsaryev/localix/releases/latest/download/SHA256SUMS.txt',
+      )
+    }
   })
 
   test('without Localix, the release kit is downloaded once, verified and kept', async () => {
