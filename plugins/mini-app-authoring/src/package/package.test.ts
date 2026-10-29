@@ -220,6 +220,22 @@ describe('packIntoCatalog', () => {
     ])
   })
 
+  test('without a homepage, the catalog entry links the repository the app is released from', async () => {
+    const { dir, outputs } = checkedApp()
+    const packageDir = await assemblePackage(dir, outputs)
+    const pack = async (manifest: Record<string, unknown>) => {
+      writeTree(packageDir, { 'mini-app.json': JSON.stringify({ ...MANIFEST, ...manifest }) })
+      return packIntoCatalog({ kit: fakeKit(), packageDir, outDir: tempDir(), publisher: 'Ada' })
+    }
+    const released = await pack({ repository: 'git+https://github.com/ada/gpu-monitor.git' })
+    expect(released.homepage).toBe('https://github.com/ada/gpu-monitor')
+    const site = await pack({
+      homepage: 'https://gpu.example.test',
+      repository: 'https://github.com/ada/gpu-monitor',
+    })
+    expect(site.homepage).toBe('https://gpu.example.test')
+  })
+
   test('an app without a valid icon is refused', async () => {
     const packageDir = tempDir()
     mkdirSync(packageDir, { recursive: true })

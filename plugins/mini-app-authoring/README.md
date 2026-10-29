@@ -34,7 +34,7 @@ mini-app create <name> [--title "…"] [--description "…"] [--dir <folder>]
 mini-app check [folder]      mini-app build [folder]      mini-app install [folder]
 mini-app pack [folder] --publisher "…" [--out <dir>]      mini-app validate <package | .tar.gz>
 mini-app icon [folder] --glyph '<path d="…"/>' [--tint #hex]
-mini-app ci [folder] [--publisher "…"]
+mini-app ci [folder] [--publisher "…"] [--repository <owner>/<repo>]
 mini-app contract            mini-app kit                 mini-app get-localix
 ```
 
@@ -48,7 +48,8 @@ domain and the screen; `mini-app contract` prints it again any time.
 
 `mini-app ci` sets an app up to be released from its repository: it writes
 `.github/workflows/mini-app.yml`, keeps what the checks generate out of git, and records the
-publisher as `author`. The workflow checks every push and pull request. A tag `v<version>` matching
+publisher as `author` and the repository as `repository`, which the app's page in Localix's Store
+links. The workflow checks every push and pull request. A tag `v<version>` matching
 `mini-app.json` makes it pack the catalog and attach it to a GitHub release, so people add
 `https://github.com/<owner>/<repo>/releases/latest/download/mini-app-catalog.json` once and get
 every later version. It builds against the kit of the Localix release the app was made with, and

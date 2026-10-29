@@ -76,6 +76,21 @@ describe('mini-app', () => {
     expect(await Bun.file(`${dir}/mini-app.json`).json()).toMatchObject({ author: 'Ada' })
   })
 
+  // The Store's page of the app, installed from its folder or from the catalog, links there.
+  test('ci keeps the repository the app is released from in mini-app.json', async () => {
+    const dir = tempDir()
+    writeTree(dir, { 'mini-app.json': '{"name":"meal-log","author":"rsaryev"}' })
+    const { context } = cli(dir)
+    const kit = fakeKit()
+    context.kit = async () => ({ kit, source: { dir: '/kit', from: 'named' } })
+
+    expect(await runCli(['ci', '--repository', 'rsaryev/meal-log'], context)).toBe(0)
+    expect(await Bun.file(`${dir}/mini-app.json`).json()).toMatchObject({
+      author: 'rsaryev',
+      repository: 'https://github.com/rsaryev/meal-log',
+    })
+  })
+
   test('kit names where the kit came from', async () => {
     const { context, output } = cli()
     expect(await runCli(['kit'], context)).toBe(0)

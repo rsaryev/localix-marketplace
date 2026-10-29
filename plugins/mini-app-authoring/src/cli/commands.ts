@@ -213,6 +213,7 @@ const ci: Command = async (args, context) => {
     manifestFile: MANIFEST_FILE,
     localixVersion: kit.manifest.localixVersion,
     publisher,
+    repository: stringOption(args, 'repository'),
   })
   const version = typeof manifest.version === 'string' ? manifest.version : '<version>'
   context.out(
@@ -249,7 +250,7 @@ export const HELP = `mini-app — create, check, build, install and share Locali
   mini-app pack [folder] [--out <dir>] [--publisher "…"]   add the app to a shareable catalog
   mini-app validate <package folder | .tar.gz> [--json]
   mini-app icon [folder] --glyph '<path …/>' [--tint #hex]   draw the app's icon from a 24×24 glyph
-  mini-app ci [folder] [--publisher "…"]   release it from GitHub: a workflow that checks and releases tags
+  mini-app ci [folder] [--publisher "…"] [--repository <owner>/<repo>]   release it from GitHub: a workflow that checks and releases tags
   mini-app keygen                        make your signing key, once (kept in ~/.config/localix)
   mini-app sign [catalog folder]         sign a packed catalog: MINI_APP_SIGNING_KEY, else your key
   mini-app contract                      the SDK contract a mini app is written against

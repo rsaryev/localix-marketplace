@@ -2,6 +2,7 @@ import { promises as fs } from 'node:fs'
 import { join } from 'node:path'
 
 import { type LocalixPin, localixPin } from '../kit/resolve'
+import { UserError } from '../lib/errors'
 
 /**
  * Publishing through GitHub: the mini app's repository carries its source, and a workflow builds and
@@ -123,7 +124,8 @@ jobs:
 /**
  * Set a mini app up to be released from GitHub: the workflow, the ignore file, and the publisher
  * kept as `author` in `mini-app.json` (the workflow packs with it). A named publisher replaces the
- * author kept; without one, the kept author stays.
+ * author kept; without one, the kept author stays. A named repository (`<owner>/<repo>` or its
+ * address) is kept as `repository`: the Store's page of the app links there.
  */
 export async function writeReleaseSetup(input: {
   dir: string
@@ -131,13 +133,17 @@ export async function writeReleaseSetup(input: {
   manifestFile: string
   localixVersion: string | undefined
   publisher: string | undefined
+  repository?: string
 }): Promise<LocalixPin> {
   const { dir, manifest, publisher } = input
-  if (publisher && manifest.author !== publisher) {
-    await fs.writeFile(
-      join(dir, input.manifestFile),
-      `${JSON.stringify({ ...manifest, author: publisher }, null, 2)}\n`,
-    )
+  const repository = input.repository && repositoryAddress(input.repository)
+  const kept = {
+    ...manifest,
+    ...(publisher ? { author: publisher } : {}),
+    ...(repository ? { repository } : {}),
+  }
+  if (kept.author !== manifest.author || kept.repository !== manifest.repository) {
+    await fs.writeFile(join(dir, input.manifestFile), `${JSON.stringify(kept, null, 2)}\n`)
   }
   const pin = localixPin(input.localixVersion)
   const displayName = String(manifest.displayName ?? manifest.name ?? 'Mini app')
@@ -145,4 +151,14 @@ export async function writeReleaseSetup(input: {
   await fs.writeFile(join(dir, WORKFLOW_FILE), releaseWorkflow({ displayName, pin }))
   await ensureGitignore(dir)
   return pin
+}
+
+/** A repository's address: `<owner>/<repo>` on GitHub, or an `https://` address as given. */
+function repositoryAddress(repository: string): string {
+  const value = repository.trim()
+  if (value.startsWith('https://')) return value
+  if (/^[\w.-]+\/[\w.-]+$/.test(value)) return `https://github.com/${value}`
+  throw new UserError(
+    `Name the repository as <owner>/<repo> or its https:// address, not ${value}.`,
+  )
 }

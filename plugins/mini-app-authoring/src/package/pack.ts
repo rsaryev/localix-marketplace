@@ -58,6 +58,19 @@ const extensionOf = (path: string) => {
   return dot > 0 ? name.slice(dot + 1).toLowerCase() : ''
 }
 
+/**
+ * A repository's page: `git+https://…/app.git` and `git@host:owner/app.git` both read as
+ * `https://host/owner/app`; anything else names no page.
+ */
+function repositoryPage(repository: unknown): string | undefined {
+  const page = text(repository)
+    ?.trim()
+    .replace(/^git\+/, '')
+    .replace(/^git@([^:/\s]+):/, 'https://$1/')
+    .replace(/\.git$/, '')
+  return page && /^https:\/\/[^\s/]+\/\S+$/.test(page) ? page : undefined
+}
+
 /** Every regular file of the package but `skip`, keyed by its `/`-separated path. */
 async function filesOf(
   dir: string,
@@ -176,7 +189,10 @@ export async function packIntoCatalog(input: {
     entry.readme = await publish(outDir, app, 'readme', readme, 'md')
   }
   if (Array.isArray(manifest.tags) && manifest.tags.length) entry.tags = manifest.tags
-  for (const key of ['homepage', 'license']) if (text(manifest[key])) entry[key] = manifest[key]
+  if (text(manifest.license)) entry.license = manifest.license
+  // Without a site of its own, the Store's page links the repository it is released from.
+  const homepage = text(manifest.homepage) ?? repositoryPage(manifest.repository)
+  if (homepage) entry.homepage = homepage
   const author =
     text(manifest.author) ?? text((manifest.author as { name?: unknown } | undefined)?.name)
   if (author) entry.author = author

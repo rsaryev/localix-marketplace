@@ -32,12 +32,15 @@ yourself and name it at the end. Ask the person one thing only: the confirmation
 2. **Set it up and check it.** Run both before anything leaves the computer:
 
    ```bash
-   mini-app ci <folder> --publisher "<login>"
+   mini-app ci <folder> --publisher "<login>" --repository <owner>/<repo>
    mini-app check <folder>
    ```
 
-   `mini-app ci` writes `.github/workflows/mini-app.yml`, adds what the checks generate
-   (`tsconfig.json`, `KIT.md`, `dist/`) to `.gitignore`, and keeps the publisher as `author`. Fix
+   The repository is `<login>/<name>` for a first release, or the one the app already has
+   (`gh repo view --json nameWithOwner -q .nameWithOwner` in its folder). `mini-app ci` writes
+   `.github/workflows/mini-app.yml`, adds what the checks generate (`tsconfig.json`, `KIT.md`,
+   `dist/`) to `.gitignore`, keeps the publisher as `author` and the repository as `repository`:
+   the app's page in Localix's Store links there, installed from its folder or its catalog. Fix
    whatever the check reports. Before a **first** release, start the `mini-app-reviewer` agent in
    the background while you do this, and fix what it finds before step 5.
 
