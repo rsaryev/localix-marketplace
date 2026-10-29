@@ -200,6 +200,26 @@ describe('packIntoCatalog', () => {
     expect(catalog.apps.map((app: { version: string }) => app.version)).toEqual(['0.3.0'])
   })
 
+  test('the files it opens travel in its catalog entry, so the Store can offer it for one', async () => {
+    const { dir, outputs } = checkedApp()
+    const packageDir = await assemblePackage(dir, outputs)
+    const opens = [
+      { ext: ['gpu', 'gpulog'], name: 'GPU Log', role: 'Viewer', mimeType: 'text/x-gpu', x: 1 },
+    ]
+    writeTree(packageDir, {
+      'mini-app.json': JSON.stringify({ ...MANIFEST, fileAssociations: opens }),
+    })
+    const entry = await packIntoCatalog({
+      kit: fakeKit(),
+      packageDir,
+      outDir: tempDir(),
+      publisher: 'Ada',
+    })
+    expect(entry.fileAssociations).toEqual([
+      { ext: ['gpu', 'gpulog'], name: 'GPU Log', role: 'Viewer', mimeType: 'text/x-gpu' },
+    ])
+  })
+
   test('an app without a valid icon is refused', async () => {
     const packageDir = tempDir()
     mkdirSync(packageDir, { recursive: true })

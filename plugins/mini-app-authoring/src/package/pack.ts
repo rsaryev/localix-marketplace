@@ -183,6 +183,8 @@ export async function packIntoCatalog(input: {
   if (Array.isArray(manifest.surfaces)) entry.surfaces = manifest.surfaces
   const commands = Object.keys((manifest.commands as Record<string, unknown> | undefined) ?? {})
   if (commands.length) entry.commands = commands
+  const opens = fileAssociationsOf(manifest.fileAssociations)
+  if (opens.length) entry.fileAssociations = opens
 
   const catalog = await readCatalog(outDir)
   catalog.apps = [...catalog.apps.filter((other) => other.name !== name), entry].sort((a, b) =>
@@ -190,4 +192,27 @@ export async function packIntoCatalog(input: {
   )
   await fs.writeFile(join(outDir, CATALOG_FILE), `${JSON.stringify(catalog, null, 2)}\n`)
   return entry
+}
+
+/** What `fileAssociations` says of each kind of file, its own fields only: the Store reads them. */
+const ASSOCIATION_FIELDS = ['ext', 'name', 'description', 'mimeType', 'role', 'rank']
+
+/**
+ * The kinds of file the app opens, copied into its catalog entry: Localix offers the app when a
+ * person opens a file of one of them and nothing they have opens it. The kit checked the manifest,
+ * so this only keeps the declared fields.
+ */
+function fileAssociationsOf(declared: unknown): Record<string, unknown>[] {
+  if (!Array.isArray(declared)) return []
+  return declared.flatMap((association) =>
+    association && typeof association === 'object'
+      ? [
+          Object.fromEntries(
+            ASSOCIATION_FIELDS.flatMap((key) =>
+              key in association ? [[key, (association as Record<string, unknown>)[key]]] : [],
+            ),
+          ),
+        ]
+      : [],
+  )
 }

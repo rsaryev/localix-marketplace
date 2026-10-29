@@ -1,6 +1,6 @@
 {
   "name": "@localix-mini-app/devops",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "Dependencies for the DevOps Workspace. Docker and Kubernetes providers ship behind one mini app entrypoint and one workspace surface.",
   "license": "MIT",

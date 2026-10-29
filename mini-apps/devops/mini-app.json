@@ -1,7 +1,7 @@
 {
   "name": "devops",
   "displayName": "DevOps",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Inspect local containers and Kubernetes resources through a shared operations workspace.",
   "author": {
     "name": "Localix"
@@ -22,5 +22,19 @@
     }
   ],
   "surfaces": ["agent", "workbench"],
-  "backend": "./backend/index.ts"
+  "backend": "./backend/index.ts",
+  "fileAssociations": [
+    {
+      "ext": ["dockerfile"],
+      "name": "Dockerfile",
+      "description": "Docker image build file",
+      "role": "Editor"
+    },
+    {
+      "ext": ["compose.yaml", "compose.yml", "docker-compose.yaml", "docker-compose.yml"],
+      "name": "Docker Compose file",
+      "description": "Docker Compose services",
+      "role": "Editor"
+    }
+  ]
 }

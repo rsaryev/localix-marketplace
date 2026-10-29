@@ -1,6 +1,6 @@
 {
   "featured": ["kanban", "project-space", "database", "code-graph", "chess"],
-  "recommended": ["git-workspace", "documents", "kanban"],
+  "recommended": ["git-workspace", "documents", "kanban", "project-space"],
   "collections": [
     {
       "id": "play-with-the-agent",

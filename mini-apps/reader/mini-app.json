@@ -1,7 +1,7 @@
 {
   "name": "reader",
   "displayName": "Reader",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Focused local reader for explicitly opened EPUB, PDF, MOBI/AZW3, FB2, CBZ, Markdown, HTML, and text with native agent context and links.",
   "author": {
     "name": "Localix"
@@ -67,7 +67,7 @@
       "description": "Focused Markdown reading view",
       "mimeType": "text/markdown",
       "role": "Viewer",
-      "rank": "Alternate"
+      "rank": "None"
     },
     {
       "ext": ["html", "htm"],
@@ -75,7 +75,7 @@
       "description": "Sanitized focused HTML reading view",
       "mimeType": "text/html",
       "role": "Viewer",
-      "rank": "Alternate"
+      "rank": "None"
     },
     {
       "ext": ["txt"],
@@ -83,7 +83,7 @@
       "description": "Focused plain-text reading view",
       "mimeType": "text/plain",
       "role": "Viewer",
-      "rank": "Alternate"
+      "rank": "None"
     }
   ]
 }

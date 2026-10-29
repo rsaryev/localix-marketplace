@@ -1,6 +1,6 @@
 {
   "name": "@localix-mini-app/reader",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Explicit-only local reading workspace with agent context and native links.",
   "license": "MIT",
