@@ -15,19 +15,18 @@ import { UserError } from '../lib/errors'
  * archive for the store page. Every URL is relative, so the folder is uploaded together — a GitHub
  * release, a site, any HTTPS host — and people add the catalog's address in Localix.
  *
+ * The file is a schema 2 catalog, in the shape of a Claude Code `marketplace.json`: its `owner`
+ * (the publisher), and each app with its `source`, here `archive` (Localix's
+ * `docs/extending/mini-app-publishing.md`, "The catalog").
+ *
  * Packing into a folder that already holds a catalog adds the app to it, replacing an earlier
  * version of the same app, so one catalog can carry several apps.
  */
 
 export const CATALOG_FILE = 'mini-app-catalog.json'
-export const CATALOG_SCHEMA = 1
+export const CATALOG_SCHEMA = 2
 const README_FILE = 'README.md'
 const README_MAX_BYTES = 512 * 1024
-
-export interface CatalogPublisher {
-  name: string
-  verified: false
-}
 
 interface PublishedFile {
   url: string
@@ -35,16 +34,18 @@ interface PublishedFile {
   sha256: string
 }
 
-interface CatalogApp {
+export interface CatalogApp {
   name: string
   version: string
-  archive: PublishedFile
+  source: PublishedFile & { source: 'archive' }
   [key: string]: unknown
 }
 
-interface Catalog {
+export interface Catalog {
   schema: number
-  apps: CatalogApp[]
+  name: string
+  owner: { name: string }
+  apps: Record<string, unknown>[]
   [key: string]: unknown
 }
 
@@ -109,14 +110,16 @@ async function publish(
   return { url, bytes: bytes.byteLength, sha256 }
 }
 
-async function readCatalog(outDir: string): Promise<Catalog> {
+/** The catalog already in `outDir`, if it is one of this schema; else a new one of `name`. */
+async function readCatalog(outDir: string, name: string, owner: string): Promise<Catalog> {
   try {
     const parsed = JSON.parse(await fs.readFile(join(outDir, CATALOG_FILE), 'utf8')) as Catalog
-    if (Array.isArray(parsed.apps)) return parsed
+    if (parsed.schema === CATALOG_SCHEMA && Array.isArray(parsed.apps))
+      return { ...parsed, owner: { name: owner } }
   } catch {
     // No catalog yet.
   }
-  return { schema: CATALOG_SCHEMA, apps: [] }
+  return { schema: CATALOG_SCHEMA, name, owner: { name: owner }, apps: [] }
 }
 
 /** Pack one built package into the catalog at `outDir`; returns the entry it wrote. */
@@ -166,13 +169,11 @@ export async function packIntoCatalog(input: {
     ...(text(manifest.category) ? { category: manifest.category } : {}),
     version,
     ...(typeof manifest.apiVersion === 'number' ? { apiVersion: manifest.apiVersion } : {}),
-    // Only the hosted Localix catalog vouches for a publisher; any other catalog is unverified.
-    publisher: { name: input.publisher, verified: false } satisfies CatalogPublisher,
+    source: { source: 'archive', url: archive, bytes: bytes.byteLength, sha256 },
     icon: {
       ...(await publish(outDir, app, 'icon', (await read(iconPath))!, iconExt)),
       type: kit.tools.manifest.iconTypes[iconExt],
     },
-    archive: { url: archive, bytes: bytes.byteLength, sha256 },
   }
   const published = []
   for (const [index, shot] of screenshots.entries()) {
@@ -195,16 +196,17 @@ export async function packIntoCatalog(input: {
   if (homepage) entry.homepage = homepage
   const author =
     text(manifest.author) ?? text((manifest.author as { name?: unknown } | undefined)?.name)
-  if (author) entry.author = author
+  if (author) entry.author = { name: author }
   if (Array.isArray(manifest.surfaces)) entry.surfaces = manifest.surfaces
   const commands = Object.keys((manifest.commands as Record<string, unknown> | undefined) ?? {})
   if (commands.length) entry.commands = commands
   const opens = fileAssociationsOf(manifest.fileAssociations)
   if (opens.length) entry.fileAssociations = opens
 
-  const catalog = await readCatalog(outDir)
+  // The publisher owns the catalog: Localix lists its apps as theirs.
+  const catalog = await readCatalog(outDir, name, input.publisher)
   catalog.apps = [...catalog.apps.filter((other) => other.name !== name), entry].sort((a, b) =>
-    a.name.localeCompare(b.name),
+    String(a.name).localeCompare(String(b.name)),
   )
   await fs.writeFile(join(outDir, CATALOG_FILE), `${JSON.stringify(catalog, null, 2)}\n`)
   return entry

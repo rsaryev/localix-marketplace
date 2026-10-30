@@ -49,11 +49,28 @@ domain and the screen; `mini-app contract` prints it again any time.
 `mini-app ci` sets an app up to be released from its repository: it writes
 `.github/workflows/mini-app.yml`, keeps what the checks generate out of git, and records the
 publisher as `author` and the repository as `repository`, which the app's page in Localix's Store
-links. The workflow checks every push and pull request. A tag `v<version>` matching
-`mini-app.json` makes it pack the catalog and attach it to a GitHub release, so people add
+links. The workflow checks every push and pull request. A tag `v<version>` matching `mini-app.json`
+makes it pack the catalog and attach it to a GitHub release, so people add
 `https://github.com/<owner>/<repo>/releases/latest/download/mini-app-catalog.json` once and get
 every later version. It builds against the kit of the Localix release the app was made with, and
 checks out only this plugin's folder from the marketplace.
+
+## Marketplaces of mini apps
+
+A repository that keeps several mini apps, or lists other people's, describes them in
+`.mini-app/marketplace.json`, in the shape of Claude Code's `.claude-plugin/marketplace.json`: a
+`name`, an `owner`, `metadata` and `apps`, each with a `source` — a folder of the repository
+(`"./mini-apps/notes"`), a GitHub repository whose latest release publishes a catalog
+(`{ "source": "github", "repo": "ada/notes" }`) or a catalog's address
+(`{ "source": "url", "url": "https://…" }`).
+
+- `mini-app marketplace validate [file] [--fetch] [--reserve <catalog url>]` checks it: sorted,
+  unique names, bounded descriptions, `https://` only, folders that hold the app they name. With
+  `--fetch` it follows each link to its catalog and says whether it is signed; `--reserve` refuses
+  the names another catalog has.
+- `mini-app marketplace build [file] [--out dir]` checks and packs each folder's app and writes the
+  catalog Localix reads, with the links beside them. The Localix marketplace and
+  [Localix Community](https://github.com/rsaryev/localix-community) are built and checked this way.
 
 ## How it relates to Localix
 
@@ -68,13 +85,12 @@ this plugin's job. The two meet in two places:
   (the latest release's when Localix is not running, runs from source, or that release has none),
   verifies it against the release's `SHA256SUMS.txt`, keeps it in the plugin's data folder and
   installs it into the app. `mini-app kit` says which Localix the app builds against;
-  `mini-app kit --update [--version <v>]` installs another release's kit.
-  `MINI_APP_KIT=<folder>` names one, such as a kit staged from a Localix checkout. Each kit carries
-  the digest of the mini app contract it was staged with (`contract` in `kit.json`, the hash of its
-  `API.md`), and Localix reports the one it implements from `GET /health`: the same digest means
-  the kit matches that Localix exactly.
-  `mini-app kit` and `mini-app check` say when they differ — a notice, not a failure, since an app
-  built against an older Localix runs on a newer one.
+  `mini-app kit --update [--version <v>]` installs another release's kit. `MINI_APP_KIT=<folder>`
+  names one, such as a kit staged from a Localix checkout. Each kit carries the digest of the mini
+  app contract it was staged with (`contract` in `kit.json`, the hash of its `API.md`), and Localix
+  reports the one it implements from `GET /health`: the same digest means the kit matches that
+  Localix exactly. `mini-app kit` and `mini-app check` say when they differ — a notice, not a
+  failure, since an app built against an older Localix runs on a newer one.
 - **Installing.** `mini-app install` hands the built package to the running Localix
   (`POST /rpc/mini-apps/install-local`); Localix validates and installs it. A shared catalog is
   installed from Localix's mini app store like any other.

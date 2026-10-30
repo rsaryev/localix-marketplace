@@ -39,10 +39,10 @@ yourself and name it at the end. Ask the person one thing only: the confirmation
    The repository is `<login>/<name>` for a first release, or the one the app already has
    (`gh repo view --json nameWithOwner -q .nameWithOwner` in its folder). `mini-app ci` writes
    `.github/workflows/mini-app.yml`, adds what the checks generate (`tsconfig.json`, `KIT.md`,
-   `dist/`) to `.gitignore`, keeps the publisher as `author` and the repository as `repository`:
-   the app's page in Localix's Store links there, installed from its folder or its catalog. Fix
-   whatever the check reports. Before a **first** release, start the `mini-app-reviewer` agent in
-   the background while you do this, and fix what it finds before step 5.
+   `dist/`) to `.gitignore`, keeps the publisher as `author` and the repository as `repository`: the
+   app's page in Localix's Store links there, installed from its folder or its catalog. Fix whatever
+   the check reports. Before a **first** release, start the `mini-app-reviewer` agent in the
+   background while you do this, and fix what it finds before step 5.
 
 3. **Its own repository.** The app gets a repository of its own, never a commit in the project
    around it. Run `git -C <folder> rev-parse --show-toplevel`:
@@ -84,6 +84,14 @@ yourself and name it at the end. Ask the person one thing only: the confirmation
 7. **Give the address**, and the link that opens Localix's **Add catalog** dialog filled in:
    `localix://ui/work-item/mini-app-store/add-catalog?url=<encoded address>`. Others can also use
    the store's catalog menu → **Add catalog…**, or `/mini-app catalog add <address>`.
+
+8. **Offer to list it in Localix Community** (`rsaryev/localix-community`), which every Localix
+   shows. Only on a yes: fork it with `gh repo fork rsaryev/localix-community --clone`, add one
+   entry to `.mini-app/marketplace.json` in alphabetical order —
+   `{ "name": "<name>", "description": "<what it does, 10–2000 characters>", "category": "<category>", "source": { "source": "github", "repo": "<owner>/<repo>" }, "homepage": "https://github.com/<owner>/<repo>" }`
+   — run `mini-app marketplace validate .mini-app/marketplace.json --fetch`, and open a pull request
+   with `gh pr create`. The listing points at the app's own catalog: what the app is, its signature
+   and its updates stay the author's.
 
 ## Without GitHub
 

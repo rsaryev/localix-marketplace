@@ -164,15 +164,18 @@ describe('packIntoCatalog', () => {
     const entry = await packIntoCatalog({ kit: fakeKit(), packageDir, outDir, publisher: 'Ada' })
     const catalog = JSON.parse(readFileSync(join(outDir, CATALOG_FILE), 'utf8'))
     expect(catalog.apps).toEqual([entry])
-    expect(entry.publisher).toEqual({ name: 'Ada', verified: false })
+    // A schema 2 catalog, in the shape of a Claude Code marketplace: the publisher owns it, and
+    // each app's source is its archive beside it.
+    expect(catalog).toMatchObject({ schema: 2, name: 'gpu-monitor', owner: { name: 'Ada' } })
+    expect(entry.source).toMatchObject({ source: 'archive' })
     expect(entry.icon).toMatchObject({ type: 'image/svg+xml' })
-    for (const file of [entry.archive, entry.icon, ...(entry.screenshots as [])] as {
+    for (const file of [entry.source, entry.icon, ...(entry.screenshots as [])] as {
       url: string
     }[]) {
       expect(existsSync(join(outDir, file.url))).toBe(true)
     }
 
-    const archive = new Bun.Archive(readFileSync(join(outDir, entry.archive.url)))
+    const archive = new Bun.Archive(readFileSync(join(outDir, entry.source.url)))
     const inside = [...(await archive.files()).keys()]
     expect(inside).toContain('mini-app.json')
     expect(inside).not.toContain('media/main.png')
@@ -183,7 +186,7 @@ describe('packIntoCatalog', () => {
     const packageDir = await assemblePackage(dir, outputs)
     const outDir = tempDir()
     const entry = await packIntoCatalog({ kit: fakeKit(), packageDir, outDir, publisher: 'Ada' })
-    const verdict = await validatePackage(fakeKit(), join(outDir, entry.archive.url))
+    const verdict = await validatePackage(fakeKit(), join(outDir, entry.source.url))
     expect(verdict).toEqual({ ok: true, name: 'gpu-monitor', problems: [], warnings: [] })
   })
 

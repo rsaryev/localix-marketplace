@@ -22,33 +22,11 @@ import { MINI_APP_NAME_RE, scaffoldMiniApp, toMiniAppName } from '../scaffold/sc
 import { stringOption } from './args'
 import { type CliContext, type Command, folder, readManifest } from './context'
 import { kitInfo, sayContractDiffers } from './kit-command'
+import { buildPackage } from './build-package'
+import { marketplaceCommand } from './marketplace-command'
 import { keygen, signCommand } from './signing-commands'
 
 export type { CliContext } from './context'
-
-/** Check, then assemble the package; null (with the report printed) when the check failed. */
-async function buildPackage(
-  dir: string,
-  context: CliContext,
-): Promise<{ packageDir: string; name: string } | null> {
-  const { kit } = await context.kit()
-  const manifest = await readManifest(dir)
-  const name = typeof manifest.name === 'string' ? manifest.name : dir
-  const { report, outputs } = await checkMiniApp({
-    kit,
-    miniAppDir: dir,
-    keepOutputs: true,
-    ...(context.runTests ? { runTests: context.runTests } : {}),
-  })
-  context.out(formatCheck(name, report))
-  await sayContractDiffers(kit, context)
-  if (!outputs) return null
-  try {
-    return { packageDir: await assemblePackage(dir, outputs), name }
-  } finally {
-    await fs.rm(outputs.dir, { recursive: true, force: true })
-  }
-}
 
 const create: Command = async (args, context) => {
   const raw = args.positional[0]
@@ -250,6 +228,8 @@ export const HELP = `mini-app — create, check, build, install and share Locali
   mini-app pack [folder] [--out <dir>] [--publisher "…"]   add the app to a shareable catalog
   mini-app validate <package folder | .tar.gz> [--json]
   mini-app icon [folder] --glyph '<path …/>' [--tint #hex]   draw the app's icon from a 24×24 glyph
+  mini-app marketplace validate [file] [--fetch] [--reserve <catalog url>]   check a .mini-app/marketplace.json
+  mini-app marketplace build [file] [--out <dir>]   pack its folders' apps into one catalog with its links
   mini-app ci [folder] [--publisher "…"] [--repository <owner>/<repo>]   release it from GitHub: a workflow that checks and releases tags
   mini-app keygen                        make your signing key, once (kept in ~/.config/localix)
   mini-app sign [catalog folder]         sign a packed catalog: MINI_APP_SIGNING_KEY, else your key
@@ -275,4 +255,5 @@ export const COMMANDS: Record<string, Command> = {
   contract,
   kit: kitInfo,
   'get-localix': getLocalixCommand,
+  marketplace: marketplaceCommand,
 }

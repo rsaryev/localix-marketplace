@@ -6,28 +6,32 @@ agent reads with `MiniAppGuide` before it first uses the app, a native backend (
 screens (`ui/`). It holds no `skills/`, `.claude-plugin/` or hooks; see
 [plugins and mini apps](https://github.com/rsaryev/localix/blob/main/docs/internals/plugins-and-mini-apps.md).
 
-Localix ships none of them. A tag `v*` of this repository releases them as one catalog,
-`mini-app-catalog.json` (`bun run pack`), which Localix trusts: they install from its Store (**Mini
-apps**) like any other, and the store features and recommends the ones
-[`catalog-picks.json`](catalog-picks.json) names. Its `suits` says what each app is for — file names
-(`*.sql`, `compose.yaml`; `*` stands for any characters) and packages a project depends on (`pg`) —
-and Localix recommends the app when one of them is open or in the project; a name there that is not
-an app here fails the scripts' tests. Each app's guide for people using it is in its `docs/` folder;
-[games](../docs/games.md) and the [recipes](../docs/recipes/) span several.
+Localix ships none of them. [`.mini-app/marketplace.json`](../.mini-app/marketplace.json) lists
+them, in the shape of [`.claude-plugin/marketplace.json`](../.claude-plugin/marketplace.json): each
+app's `source` is its folder here. A tag `v*` of this repository releases them as one catalog,
+`mini-app-catalog.json` (`bun run pack`, which runs `mini-app marketplace build`), which Localix
+trusts: they install from its Store (**Mini apps**) like any other. Localix's picks are its
+`metadata.localix`: the apps the store features (`featured`) and installs on its own on a new
+installation (`recommended`), Discover's `collections`, and what each app is for (`suits`: file
+names such as `*.sql` or `compose.yaml`, where `*` stands for any characters, and packages a project
+depends on, such as `pg`), so Localix recommends the app when one of them is open or in the project.
+A pick that names no app here fails `mini-app marketplace validate`. Each app's guide for people
+using it is in its `docs/` folder; [games](../docs/games.md) and the [recipes](../docs/recipes/)
+span several.
 
 ## Workbenches
 
-| Mini app                        | Product surface                                                      |
-| ------------------------------- | -------------------------------------------------------------------- |
-| [Code Graph](code-graph/)       | Project files, symbols, imports, calls, and graph queries.           |
-| [Database](database/)           | SQL and data-source connections, schemas, and queries.               |
-| [DevOps](devops/)               | Docker and Kubernetes inspection and operations.                     |
-| [Documents](documents/)         | Extraction, generation, viewers, tables, and charts.                 |
-| [Learning Studio](learning/)    | File-authored courses, lessons, assessment, and progress.            |
-| [Project Space](project-space/) | Shared notes and live file cards on a canvas.                        |
-| [Reader](reader/)               | Local books and documents with annotations and agent context.        |
-| [Resumes](resume/)              | Resume fields, templates, preview, and document export.              |
-| [Trading](trading/)             | Public market data; no order placement.                              |
+| Mini app                        | Product surface                                               |
+| ------------------------------- | ------------------------------------------------------------- |
+| [Code Graph](code-graph/)       | Project files, symbols, imports, calls, and graph queries.    |
+| [Database](database/)           | SQL and data-source connections, schemas, and queries.        |
+| [DevOps](devops/)               | Docker and Kubernetes inspection and operations.              |
+| [Documents](documents/)         | Extraction, generation, viewers, tables, and charts.          |
+| [Learning Studio](learning/)    | File-authored courses, lessons, assessment, and progress.     |
+| [Project Space](project-space/) | Shared notes and live file cards on a canvas.                 |
+| [Reader](reader/)               | Local books and documents with annotations and agent context. |
+| [Resumes](resume/)              | Resume fields, templates, preview, and document export.       |
+| [Trading](trading/)             | Public market data; no order placement.                       |
 
 ## Workflow and integration mini apps
 

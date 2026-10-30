@@ -68,7 +68,8 @@ function hostModulesPlugin(kit: Kit, miniAppDir: string): Bun.BunPlugin {
         if (installed(args.path, dirname(args.importer))) return undefined
         // A package's own optional peer (`canvas` under linkedom), required inside a try: left to
         // fail at runtime the way the package expects, not a build error.
-        if (/[\\/]node_modules[\\/]/u.test(args.importer)) return { path: args.path, external: true }
+        if (/[\\/]node_modules[\\/]/u.test(args.importer))
+          return { path: args.path, external: true }
         throw new Error(
           `${relative(miniAppDir, args.importer)} imports "${args.path}", which is neither installed nor served by the host — the host serves ${shared.join(', ')}, node:* and bun:*; add a package to the mini app's package.json`,
         )

@@ -10,7 +10,7 @@ export interface ParsedArgs {
 }
 
 /** Options that never take a value, so `--json dir` keeps `dir` positional. */
-const FLAGS = new Set(['json', 'help', 'no-tests', 'force', 'template'])
+const FLAGS = new Set(['json', 'help', 'no-tests', 'force', 'template', 'fetch'])
 
 export function parseArgs(argv: readonly string[]): ParsedArgs {
   const positional: string[] = []

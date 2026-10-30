@@ -1,0 +1,194 @@
+{
+  "schema": 2,
+  "name": "localix",
+  "owner": {
+    "name": "Localix"
+  },
+  "metadata": {
+    "description": "Localix's own mini apps.",
+    "localix": {
+      "featured": ["kanban", "project-space", "database", "code-graph", "chess"],
+      "recommended": ["git-workspace", "documents", "kanban", "project-space"],
+      "collections": [
+        {
+          "id": "play-with-the-agent",
+          "title": "Play with the agent",
+          "subtitle": "Board and puzzle games the agent plays against you",
+          "style": "row",
+          "items": ["chess", "checkers", "battleship", "game-2048"]
+        },
+        {
+          "id": "work-with-data",
+          "title": "Work with data",
+          "subtitle": "Query databases and APIs, and read and write documents",
+          "style": "row",
+          "items": [
+            "database",
+            "api",
+            "documents",
+            "plugin:supabase@claude-plugins-official",
+            "plugin:neon@claude-plugins-official",
+            "plugin:mongodb@claude-plugins-official",
+            "plugin:duckdb-skills@claude-plugins-official"
+          ]
+        }
+      ],
+      "suits": {
+        "database": {
+          "files": ["*.sql", "*.sqlite", "*.sqlite3", "*.db"],
+          "dependencies": [
+            "pg",
+            "postgres",
+            "mysql2",
+            "mysql",
+            "better-sqlite3",
+            "sqlite3",
+            "mssql",
+            "tedious",
+            "mongodb",
+            "mongoose",
+            "redis",
+            "ioredis",
+            "@elastic/elasticsearch",
+            "prisma",
+            "@prisma/client",
+            "drizzle-orm",
+            "kysely",
+            "typeorm",
+            "sequelize",
+            "knex"
+          ]
+        },
+        "devops": {
+          "files": [
+            "Dockerfile",
+            "*.dockerfile",
+            "compose.yaml",
+            "compose.yml",
+            "docker-compose.yaml",
+            "docker-compose.yml",
+            "Chart.yaml",
+            "kustomization.yaml",
+            "kustomization.yml",
+            "skaffold.yaml"
+          ],
+          "dependencies": ["dockerode", "@kubernetes/client-node"]
+        },
+        "api": {
+          "files": [
+            "*.http",
+            "*.rest",
+            "openapi.yaml",
+            "openapi.yml",
+            "openapi.json",
+            "swagger.yaml",
+            "swagger.json",
+            "*.postman_collection.json",
+            "*.har",
+            "*.request.json"
+          ],
+          "dependencies": ["express", "fastify", "hono", "koa", "@nestjs/core", "elysia"]
+        },
+        "documents": {
+          "files": [
+            "*.docx",
+            "*.doc",
+            "*.odt",
+            "*.pptx",
+            "*.xlsx",
+            "*.xls",
+            "*.xlsm",
+            "*.xlsb",
+            "*.csv",
+            "*.pdf"
+          ],
+          "dependencies": ["exceljs", "xlsx", "docx", "pptxgenjs", "pdf-lib", "pdfkit"]
+        },
+        "reader": {
+          "files": ["*.epub", "*.mobi", "*.azw3", "*.fb2", "*.cbz"]
+        },
+        "learning": {
+          "files": ["course.json", "*.localix-course"]
+        }
+      }
+    }
+  },
+  "apps": [
+    {
+      "name": "api",
+      "source": "./mini-apps/api"
+    },
+    {
+      "name": "battleship",
+      "source": "./mini-apps/battleship"
+    },
+    {
+      "name": "checkers",
+      "source": "./mini-apps/checkers"
+    },
+    {
+      "name": "chess",
+      "source": "./mini-apps/chess"
+    },
+    {
+      "name": "code-graph",
+      "source": "./mini-apps/code-graph"
+    },
+    {
+      "name": "database",
+      "source": "./mini-apps/database"
+    },
+    {
+      "name": "devops",
+      "source": "./mini-apps/devops"
+    },
+    {
+      "name": "documents",
+      "source": "./mini-apps/documents"
+    },
+    {
+      "name": "game-2048",
+      "source": "./mini-apps/game-2048"
+    },
+    {
+      "name": "git-workspace",
+      "source": "./mini-apps/git-workspace"
+    },
+    {
+      "name": "kanban",
+      "source": "./mini-apps/kanban"
+    },
+    {
+      "name": "learning",
+      "source": "./mini-apps/learning"
+    },
+    {
+      "name": "project-space",
+      "source": "./mini-apps/project-space"
+    },
+    {
+      "name": "reader",
+      "source": "./mini-apps/reader"
+    },
+    {
+      "name": "resume",
+      "source": "./mini-apps/resume"
+    },
+    {
+      "name": "rock-paper-scissors",
+      "source": "./mini-apps/rock-paper-scissors"
+    },
+    {
+      "name": "snake",
+      "source": "./mini-apps/snake"
+    },
+    {
+      "name": "tic-tac-toe",
+      "source": "./mini-apps/tic-tac-toe"
+    },
+    {
+      "name": "trading",
+      "source": "./mini-apps/trading"
+    }
+  ]
+}

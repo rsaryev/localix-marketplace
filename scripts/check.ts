@@ -12,7 +12,7 @@ import { kitDir, ROOT } from './kit'
  * about to publish (`MINI_APP_KIT=<kit>`), where Claude Code is not installed.
  *
  * Named `plugins`, or with nothing named, it first checks the plugins: the authoring plugin's
- * types and tests and this repository's scripts' tests, then Claude Code's validation — each plugin with `--strict`, the marketplace
+ * types and tests and this repository's `.mini-app/marketplace.json`, then Claude Code's validation — each plugin with `--strict`, the marketplace
  * without it, because its `metadata.localix` (Localix's recommendations and collections) is a field
  * Claude Code does not know and ignores at load time.
  */
@@ -40,7 +40,7 @@ function checkPlugins(): boolean {
   return [
     step(['bun', 'run', 'type-check'], join(PLUGINS, 'mini-app-authoring')),
     step(['bun', 'run', 'test:plugins']),
-    step(['bun', 'run', 'test:scripts']),
+    step([TOOL, 'marketplace', 'validate']),
     ...plugins.map((plugin) => step(['claude', 'plugin', 'validate', '--strict', plugin])),
     step(['claude', 'plugin', 'validate', '.']),
   ].every(Boolean)

@@ -68,7 +68,9 @@ export async function kitDir(): Promise<string> {
 if (import.meta.main) {
   const dir = await kitDir()
   const kit = JSON.parse(readFileSync(join(dir, 'kit.json'), 'utf8'))
-  console.log(`kit: Localix ${kit.localixVersion}, apiVersion ${kit.apiVersion}, ${dir.replace(ROOT, '.')}`)
+  console.log(
+    `kit: Localix ${kit.localixVersion}, apiVersion ${kit.apiVersion}, ${dir.replace(ROOT, '.')}`,
+  )
   // Installed as the package too: a mini app's bunfig preloads `@localixai/mini-app-kit/test-preload`.
   if (dir !== LINKED && !existsSync(LINKED)) {
     mkdirSync(dirname(LINKED), { recursive: true })
