@@ -8,6 +8,7 @@ import type { CliContext } from './commands'
 import { runCli } from './main'
 
 const tempDir = tempDirPerTest('mini-app-signing-cli-')
+const RELEASE = '{"schema":3,"name":"ada","owner":{"name":"Ada"},"apps":[]}\n'
 
 function cli(env: Record<string, string | undefined> = {}) {
   const lines: string[] = []
@@ -35,19 +36,28 @@ describe('mini-app keygen and sign', () => {
     expect(output()).toContain('already')
   })
 
-  test('sign writes the signature beside the catalog with the key keygen made', async () => {
+  test('sign writes the signature beside the release with the key keygen made', async () => {
     const { context, output } = cli()
     await runCli(['keygen'], context)
-    const catalog = join(context.cwd, 'catalog')
-    writeTree(catalog, { 'mini-app-catalog.json': '{"schema":1,"apps":[]}\n' })
-    expect(await runCli(['sign', 'catalog'], context)).toBe(0)
-    expect(existsSync(join(catalog, 'mini-app-catalog.json.sig'))).toBe(true)
+    const release = join(context.cwd, 'marketplace')
+    writeTree(release, { 'mini-app-marketplace.json': RELEASE })
+    expect(await runCli(['sign', 'marketplace'], context)).toBe(0)
+    expect(existsSync(join(release, 'mini-app-marketplace.json.sig'))).toBe(true)
     expect(output()).toContain('Signed')
+  })
+
+  test('sign --next-key hands the next release over to another key, and says so', async () => {
+    const { context, output } = cli()
+    await runCli(['keygen'], context)
+    writeTree(context.cwd, { 'mini-app-marketplace.json': RELEASE })
+    const next = 'bwCq5MPyZb+OxOHQnaBtzi9GmXBvu1U6WnGeyEPhdXg='
+    expect(await runCli(['sign', '--next-key', next], context)).toBe(0)
+    expect(output()).toContain(`The next release is signed with ${next}`)
   })
 
   test('sign without any key says how to get one', async () => {
     const { context, output } = cli()
-    writeTree(context.cwd, { 'mini-app-catalog.json': '{"schema":1,"apps":[]}\n' })
+    writeTree(context.cwd, { 'mini-app-marketplace.json': RELEASE })
     expect(await runCli(['sign'], context)).toBe(1)
     expect(output()).toContain('mini-app keygen')
   })

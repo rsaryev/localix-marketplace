@@ -37,10 +37,10 @@ silence a check by deleting a test or loosening a rule.
   The comment waives only that rule on that element. One without a reason after the dash is a
   problem of its own.
 
-- **store media** failing does not stop a build or an install, but a catalog refuses an app without
+- **store media** failing does not stop a build or an install, but packing refuses an app without
   a valid icon. Fix it before publishing.
 - **private keys** names a file that holds one. Delete it: the app's folder becomes a public
-  repository. A catalog signing key lives in the person's config folder (`mini-app keygen`) and the
+  repository. A marketplace signing key lives in the person's config folder (`mini-app keygen`) and the
   repository's `MINI_APP_SIGNING_KEY` secret, never beside the app.
 - **types** reads the `tsconfig.json` the check writes; the editor's diagnostics read the same one.
 - **tests** runs `bun test` with the kit's modules preloaded. A mini app without tests passes this

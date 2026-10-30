@@ -21,7 +21,7 @@ describe('installKit', () => {
   // The agent building a mini app reads the SDK's declarations from the app's own folder.
   test('puts the kit in the mini app’s node_modules, where the commands find it next', async () => {
     const app = tempDir()
-    writeTree(app, { 'mini-app.json': '{}' })
+    writeTree(app, { '.localix-mini-app/mini-app.json': '{}' })
     const installed = await installKit(kitAt('0.4.0'), app)
 
     expect(installed).toBe(join(app, INSTALLED_KIT))
@@ -56,14 +56,14 @@ describe('installKit', () => {
 describe('kitInApp', () => {
   test('a downloaded kit is installed into the mini app a command works on', async () => {
     const app = tempDir()
-    writeTree(app, { 'mini-app.json': '{}' })
+    writeTree(app, { '.localix-mini-app/mini-app.json': '{}' })
     const source = await kitInApp({ dir: kitAt('0.4.0'), from: 'release' }, app)
     expect(source).toEqual({ dir: join(app, INSTALLED_KIT), from: 'installed' })
   })
 
   test('a named or already installed kit, or a folder that is no mini app, is left alone', async () => {
     const app = tempDir()
-    writeTree(app, { 'mini-app.json': '{}' })
+    writeTree(app, { '.localix-mini-app/mini-app.json': '{}' })
     const named = { dir: kitAt('0.4.0'), from: 'named' } as const
     expect(await kitInApp(named, app)).toEqual(named)
     const elsewhere = tempDir()

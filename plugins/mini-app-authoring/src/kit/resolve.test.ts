@@ -48,7 +48,7 @@ describe('resolveKit', () => {
     const repo = tempDir()
     writeTree(join(repo, 'node_modules/@localixai/mini-app-kit'), { 'kit.json': '{}' })
     const app = join(repo, 'mini-apps', 'chess')
-    writeTree(app, { 'mini-app.json': '{}' })
+    writeTree(app, { '.localix-mini-app/mini-app.json': '{}' })
     const fetchImpl = (() => {
       throw new Error('fetched')
     }) as unknown as typeof fetch

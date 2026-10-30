@@ -6,8 +6,8 @@ import type { CheckOutputs } from '../check/check'
 import { MANIFEST_FILE } from '../check/check'
 
 /**
- * A mini app's PACKAGE: the folder Localix installs and a catalog archive holds. `mini-app.json`
- * at its root naming the built backend, the agent's guide, the store media and every other file the
+ * A mini app's PACKAGE: the folder Localix installs and a marketplace archive holds. Its manifest
+ * (`.localix-mini-app/mini-app.json`) naming the built backend, the agent's guide, the store media and every other file the
  * app ships, and `dist/` with the backend bundle and the UI artifact. Built code only: the sources
  * the bundles absorbed, the tests and the authoring files stay behind.
  *
@@ -92,7 +92,7 @@ export async function assemblePackage(miniAppDir: string, outputs: CheckOutputs)
     const manifest = { ...outputs.manifest }
     if (outputs.backend) manifest.backend = outputs.backend
     else delete manifest.backend
-    await fs.mkdir(next, { recursive: true })
+    await fs.mkdir(dirname(join(next, MANIFEST_FILE)), { recursive: true })
     await fs.writeFile(join(next, MANIFEST_FILE), `${JSON.stringify(manifest, null, 2)}\n`)
 
     const previous = join(dirname(target), `.package-previous-${randomUUID()}`)

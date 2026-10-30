@@ -3,6 +3,7 @@ import { existsSync, promises as fs } from 'node:fs'
 import { dirname, join, relative } from 'node:path'
 
 import type { Kit } from '../kit/kit'
+import { MANIFEST_FILE } from '../lib/manifest-file'
 import { resolveWithin } from '../lib/paths'
 import { formatBuildLogs } from './build-logs'
 import { assertContainedBuildInputs } from './source-imports'
@@ -35,7 +36,7 @@ export function backendSource(
   const declared = manifest.backend
   if (typeof declared === 'string' && /\.[cm]?tsx?$/u.test(declared)) {
     const path = resolveWithin(miniAppDir, declared)
-    if (!path) throw new Error(`mini-app.json names a backend outside the folder: ${declared}`)
+    if (!path) throw new Error(`${MANIFEST_FILE} names a backend outside the folder: ${declared}`)
     return existsSync(path) ? path : null
   }
   const conventional = join(miniAppDir, BACKEND_SOURCE)

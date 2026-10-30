@@ -145,8 +145,8 @@ Claude Code plugins, loaded by Localix as they are.
 ## Build your own
 
 Every mini app here starts from the same template as yours: run `/mini-app-authoring:create` and
-describe it. To publish your own catalog, keep your apps in a repository like this one and add it
-to the Localix Store as a source. See
+describe it. To publish your own marketplace, keep your apps in a repository like this one and add
+it to the Localix Store as a source. See
 [build with the agent](https://localix.ai/docs/extending--build-with-the-agent) and
 [mini apps](https://localix.ai/docs/features--mini-apps).
 
@@ -155,7 +155,8 @@ to the Localix Store as a source. See
 Bun only (`.bun-version`); `bun install` links the mini app kit. `bun run check` runs what CI runs:
 the plugins (types, tests, `claude plugin validate`) and every mini app with `mini-app check`.
 `bun run check <app>` checks one, and the pre-commit hook checks what is staged. `bun run pack`
-builds the catalog into `dist/catalog`; each `v*` tag releases it.
+builds the mini app marketplace into `dist/marketplace` (`mini-app-marketplace.json` and each app's
+archive and media); each `v*` tag releases it, signed.
 
 [Mini apps](mini-apps/README.md) and [plugins](plugins/README.md) describe how to add one. This
 repository is released under the [MIT License](LICENSE).

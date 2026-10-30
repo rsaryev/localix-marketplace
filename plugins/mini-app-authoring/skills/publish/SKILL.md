@@ -2,7 +2,7 @@
 name: publish
 description:
   Share a Localix mini app with other people — its source in a GitHub repository whose workflow
-  checks it and releases a catalog on each version tag — and ship updates to it. Use when the person
+  checks it and releases a marketplace on each version tag — and ship updates to it. Use when the person
   wants to share, publish, release or update a mini app for others.
 argument-hint: '[mini app folder]'
 allowed-tools: Bash(mini-app:*)
@@ -10,15 +10,16 @@ allowed-tools: Bash(mini-app:*)
 
 # Publish a mini app
 
-People install shared mini apps from a **catalog**: `mini-app-catalog.json` beside one archive per
-app and its store media, in one HTTPS folder. Localix lists every catalog a person has added in its
-mini app store.
+People install shared mini apps from a **marketplace**: `mini-app-marketplace.json` beside one
+archive per app and its store media, in one place. Localix lists every marketplace a person has
+added in Store → **Sources**, and offers each app as `<app>@<marketplace>`.
 
-The catalog is built by GitHub, not on this computer. The app's repository holds its source, and the
-workflow `mini-app ci` writes checks every push. A tag `v<version>` (the version in `mini-app.json`)
-makes it release the catalog, built with the toolchain and kit of the Localix the app was made with.
-Its address never changes:
-`https://github.com/<owner>/<repo>/releases/latest/download/mini-app-catalog.json`.
+The marketplace is built by GitHub, not on this computer. The app's repository holds its source, and
+the workflow `mini-app ci` writes checks every push. A tag `v<version>` (the version in
+`.localix-mini-app/mini-app.json`) makes it release the marketplace, built with the toolchain and kit
+of the Localix the app was made with. People add it by the repository alone, `<owner>/<repo>`:
+Localix reads `https://github.com/<owner>/<repo>/releases/latest/download/mini-app-marketplace.json`,
+an address that never changes.
 
 ## Steps
 
@@ -27,7 +28,7 @@ yourself and name it at the end. Ask the person one thing only: the confirmation
 
 1. **Who and what.** The publisher is the GitHub login (`gh api user --jq .login`). Without `gh`, or
    signed out, skip to [Without GitHub](#without-github). For an update, raise `version` in
-   `mini-app.json`: patch for fixes, minor for new things. Installed copies update by version alone,
+   `.localix-mini-app/mini-app.json`: patch for fixes, minor for new things. Installed copies update by version alone,
    so new content under the same version reaches no one.
 2. **Set it up and check it.** Run both before anything leaves the computer:
 
@@ -40,7 +41,7 @@ yourself and name it at the end. Ask the person one thing only: the confirmation
    (`gh repo view --json nameWithOwner -q .nameWithOwner` in its folder). `mini-app ci` writes
    `.github/workflows/mini-app.yml`, adds what the checks generate (`tsconfig.json`, `KIT.md`,
    `dist/`) to `.gitignore`, keeps the publisher as `author` and the repository as `repository`: the
-   app's page in Localix's Store links there, installed from its folder or its catalog. Fix whatever
+   app's page in Localix's Store links there, installed from its folder or its marketplace. Fix whatever
    the check reports. Before a **first** release, start the `mini-app-reviewer` agent in the
    background while you do this, and fix what it finds before step 5.
 
@@ -63,7 +64,7 @@ yourself and name it at the end. Ask the person one thing only: the confirmation
    - Later releases: `git -C <folder> push`.
 
    Then make sure the release is signed: Localix updates an app on its own only from a signed
-   catalog. If `gh secret list --repo <owner>/<repo>` has no `MINI_APP_SIGNING_KEY`, run
+   marketplace. If `gh secret list --repo <owner>/<repo>` has no `MINI_APP_SIGNING_KEY`, run
    `mini-app keygen` (it makes the person's key once, in their config folder, and names the file)
    and `gh secret set MINI_APP_SIGNING_KEY --repo <owner>/<repo> < <key file>`. One key signs every
    app the person publishes; never copy it into the app's folder or print it.
@@ -81,34 +82,39 @@ yourself and name it at the end. Ask the person one thing only: the confirmation
    Then move the tag to the fix with `git tag -f v<version>` and `git push -f origin v<version>`; no
    release exists yet, so nobody has that version.
 
-7. **Give the address**, and the link that opens Localix's **Add catalog** dialog filled in:
-   `localix://ui/work-item/mini-app-store/add-catalog?url=<encoded address>`. Others can also use
-   the store's catalog menu → **Add catalog…**, or `/mini-app catalog add <address>`.
+7. **Give the repository**, `<owner>/<repo>`, and the link that opens Localix's **Add source**
+   dialog filled in: `localix://ui/work-item/mini-app-store/add-marketplace?url=<owner>%2F<repo>`.
+   Others can also use Store → **Sources** → **Add source…**, or
+   `/mini-app marketplace add <owner>/<repo>`.
 
 8. **Offer to list it in Localix Community** (`rsaryev/localix-community`), which every Localix
    shows. Only on a yes: fork it with `gh repo fork rsaryev/localix-community --clone`, add one
-   entry to `.mini-app/marketplace.json` in alphabetical order —
-   `{ "name": "<name>", "description": "<what it does, 10–2000 characters>", "category": "<category>", "source": { "source": "github", "repo": "<owner>/<repo>" }, "homepage": "https://github.com/<owner>/<repo>" }`
-   — run `mini-app marketplace validate .mini-app/marketplace.json --fetch`, and open a pull request
-   with `gh pr create`. The listing points at the app's own catalog: what the app is, its signature
-   and its updates stay the author's.
+   entry to `.localix-mini-app/marketplace.json` in alphabetical order —
+   `{ "name": "<name>", "source": { "source": "github", "repo": "<owner>/<repo>" }, "description": "<what it does, 10–2000 characters>", "category": "<category>", "homepage": "https://github.com/<owner>/<repo>" }`
+   — run `mini-app marketplace validate --fetch` in the fork, and open a pull request with
+   `gh pr create`. The listing points at the app's own marketplace: what the app is, its signature
+   and its updates stay the author's; people see it as `<name>@localix-community`.
 
 ## Without GitHub
 
 Run `mini-app pack <folder> --publisher "<name>"`. It checks and builds the app into
-`<folder>/dist/catalog`; then `mini-app keygen` (once) and `mini-app sign <folder>/dist/catalog`
-sign it. Say that every file there goes into one HTTPS folder, and that
+`<folder>/dist/marketplace`; then `mini-app keygen` (once) and
+`mini-app sign <folder>/dist/marketplace` sign it. Say that every file there goes into one HTTPS
+folder, whose `mini-app-marketplace.json` address people add, and that
 `/mini-app-authoring:publish` with the GitHub CLI signed in (`gh auth login`) does all of this,
 updates included.
 
 ## What to tell the person
 
-- A catalog's publisher shows as unverified; only the hosted Localix catalog verifies publishers.
-  Installing from an unverified publisher asks **Install anyway?**.
+- A marketplace's publisher shows as unverified; only the Localix marketplace verifies publishers.
+  Installing from an unverified publisher asks first.
 - Installed copies of a signed app take a newer version within six hours, or at once with Update;
   each person can turn that off on the app's page. An unsigned app updates only with Update.
-- Keep the signing key: if it changes, Localix shows **Signature changed** and installs nothing from
-  the catalog until people remove it and add it again. The next release is a raised `version`, a
-  commit, and a tag `v<version>`: GitHub builds the rest.
+- Keep the signing key: a release signed with a key Localix was not told of shows **Signature
+  changed**, and nothing installs or updates from it. To move to a new key, sign one release with
+  the old key and `mini-app sign --next-key <new public key>`, then sign with the new one. The next
+  release is a raised `version`, a commit, and a tag `v<version>`: GitHub builds the rest.
+- To take a version back, the app's entry gets `revoked` with a reason; installed copies of it stop
+  at the next read of the marketplace.
 - After updating Localix, run `mini-app ci` again: the workflow then builds with the new release.
-- Raising `apiVersion` in `mini-app.json` makes an older Localix list the app as needing an update.
+- Raising `apiVersion` in `.localix-mini-app/mini-app.json` makes an older Localix list the app as needing an update.

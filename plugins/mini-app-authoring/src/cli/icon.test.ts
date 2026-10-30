@@ -12,7 +12,7 @@ const GLYPH = '<path d="M12 2v20"/><circle cx="12" cy="12" r="4"/>'
 
 function miniApp() {
   const dir = tempDir()
-  writeTree(dir, { 'mini-app.json': '{"name":"meal-log","icon":"./icon.svg"}' })
+  writeTree(dir, { '.localix-mini-app/mini-app.json': '{"name":"meal-log","icon":"./icon.svg"}' })
   const lines: string[] = []
   const context: CliContext = {
     cwd: dir,

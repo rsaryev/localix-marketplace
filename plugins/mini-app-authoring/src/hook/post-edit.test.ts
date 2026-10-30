@@ -10,7 +10,7 @@ const tempDir = tempDirPerTest('mini-app-hook-')
 function app() {
   const dir = tempDir()
   writeTree(dir, {
-    'mini-app.json': '{"name":"gpu-monitor"}',
+    '.localix-mini-app/mini-app.json': '{"name":"gpu-monitor"}',
     'ui/Workspace.tsx': 'export const Workspace = () => <button onClick={go}>Go</button>\n',
     'ui/Clean.tsx': 'export const Clean = () => null\n',
     'backend/routes.ts': "app.post('/x', async (c) => { const body = await c.req.json() })\n",
@@ -68,8 +68,9 @@ describe('the post-edit hook', () => {
   })
 })
 
-test('a file’s mini app is the nearest folder with a mini-app.json', () => {
+test('a file’s mini app is the nearest folder with a .localix-mini-app/mini-app.json', () => {
   const dir = app()
   expect(miniAppRootOf(join(dir, 'ui/Workspace.tsx'))).toBe(dir)
+  expect(miniAppRootOf(join(dir, '.localix-mini-app/mini-app.json'))).toBe(dir)
   expect(miniAppRootOf(join(dir, 'node_modules/x/index.ts'))).toBeNull()
 })

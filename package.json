@@ -1,7 +1,7 @@
 {
   "name": "localix-marketplace",
   "private": true,
-  "description": "Localix's own Claude Code plugins and mini apps, installed through Localix's marketplace and mini app catalog like any other.",
+  "description": "Localix's own Claude Code plugins and mini apps, installed through Localix's marketplaces like any other.",
   "license": "MIT",
   "type": "module",
   "workspaces": ["mini-apps/*", "plugins/*"],

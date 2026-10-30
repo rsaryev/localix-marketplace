@@ -2,7 +2,7 @@ name: CI
 
 # Every push and pull request: each mini app passes `mini-app check` (manifest, style, builds,
 # types, tests) against the Localix kit package.json pins, and the plugins pass their own tests and
-# Claude Code's validation. A tag `v*` then releases the mini app catalog.
+# Claude Code's validation. A tag `v*` then releases the mini app marketplace.
 on:
   push:
     branches: [main]
@@ -41,7 +41,7 @@ jobs:
         with:
           bun-version-file: .bun-version
       - run: bun install --frozen-lockfile
-      - name: Pack and sign the catalog
+      - name: Build and sign the mini app marketplace
         env:
           MINI_APP_SIGNING_KEY: ${{ secrets.MINI_APP_SIGNING_KEY }}
         run: bun run pack
@@ -49,5 +49,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" dist/catalog/* \
-            --title "$GITHUB_REF_NAME" --notes "Localix mini app catalog $GITHUB_REF_NAME."
+          gh release create "$GITHUB_REF_NAME" dist/marketplace/* \
+            --title "$GITHUB_REF_NAME" --notes "Localix mini app marketplace $GITHUB_REF_NAME."

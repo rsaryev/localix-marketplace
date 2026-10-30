@@ -7,24 +7,24 @@ import { mediaFields } from '../check/media'
 import type { Kit } from '../kit/kit'
 import { readAppFile } from '../lib/app-file'
 import { UserError } from '../lib/errors'
+import { MANIFEST_DIR } from '../lib/manifest-file'
 
 /**
- * A CATALOG: what a person publishes to share mini apps, and what Localix's store reads. One gzip
- * tarball per app whose root is the app's package, and `mini-app-catalog.json` naming each archive
+ * A RELEASED MARKETPLACE (Localix's `docs/extending/mini-app-marketplace.md`): what a person
+ * publishes to share mini apps, and what Localix's Store reads. One gzip tarball per app whose root
+ * is the app's package, and the kit's release file (`mini-app-marketplace.json`) naming each archive
  * beside it with its size and sha256, plus the icon, screenshots and README published beside the
- * archive for the store page. Every URL is relative, so the folder is uploaded together — a GitHub
- * release, a site, any HTTPS host — and people add the catalog's address in Localix.
+ * archive for the Store page. Every URL is relative, so the folder is uploaded together — a GitHub
+ * release, a site, any HTTPS host — and people add its address, or the GitHub repository, in
+ * Localix.
  *
- * The file is a schema 2 catalog, in the shape of a Claude Code `marketplace.json`: its `owner`
- * (the publisher), and each app with its `source`, here `archive` (Localix's
- * `docs/extending/mini-app-publishing.md`, "The catalog").
- *
- * Packing into a folder that already holds a catalog adds the app to it, replacing an earlier
- * version of the same app, so one catalog can carry several apps.
+ * `packApp` writes one app's files and returns its entry; `mini-app marketplace build` writes the
+ * entries of a repository's marketplace. `packIntoMarketplace` is a marketplace of its own: packing
+ * into a folder that already holds one adds the app to it, replacing an earlier version of the same
+ * app, so one release can carry several apps; a new one is named after the app it starts with and
+ * kept by the publisher.
  */
 
-export const CATALOG_FILE = 'mini-app-catalog.json'
-export const CATALOG_SCHEMA = 2
 const README_FILE = 'README.md'
 const README_MAX_BYTES = 512 * 1024
 
@@ -34,17 +34,18 @@ interface PublishedFile {
   sha256: string
 }
 
-export interface CatalogApp {
+export interface PackedApp {
   name: string
   version: string
   source: PublishedFile & { source: 'archive' }
   [key: string]: unknown
 }
 
-export interface Catalog {
+interface Release {
   schema: number
   name: string
   owner: { name: string }
+  published?: string
   apps: Record<string, unknown>[]
   [key: string]: unknown
 }
@@ -80,7 +81,13 @@ async function filesOf(
   const files: Record<string, Uint8Array> = {}
   const visit = async (current: string) => {
     for (const entry of await fs.readdir(current, { withFileTypes: true })) {
-      if (entry.name.startsWith('.localix-') || entry.name === '.DS_Store') continue
+      // What Localix writes beside an installed copy (`.localix-install.json`) never ships; the
+      // manifest's folder does.
+      if (
+        (entry.name.startsWith('.localix-') && entry.name !== MANIFEST_DIR) ||
+        entry.name === '.DS_Store'
+      )
+        continue
       const path = join(current, entry.name)
       if (entry.isDirectory()) await visit(path)
       else if (entry.isFile()) {
@@ -110,25 +117,38 @@ async function publish(
   return { url, bytes: bytes.byteLength, sha256 }
 }
 
-/** The catalog already in `outDir`, if it is one of this schema; else a new one of `name`. */
-async function readCatalog(outDir: string, name: string, owner: string): Promise<Catalog> {
-  try {
-    const parsed = JSON.parse(await fs.readFile(join(outDir, CATALOG_FILE), 'utf8')) as Catalog
-    if (parsed.schema === CATALOG_SCHEMA && Array.isArray(parsed.apps))
-      return { ...parsed, owner: { name: owner } }
-  } catch {
-    // No catalog yet.
-  }
-  return { schema: CATALOG_SCHEMA, name, owner: { name: owner }, apps: [] }
+/**
+ * A marketplace's name from its first app's: lower-case words joined by dashes, at least two
+ * characters, as Localix reads a marketplace name.
+ */
+export function marketplaceNameOf(app: string): string {
+  const name = app
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 64)
+  return name.length >= 2 ? name : `${name || 'app'}-apps`
 }
 
-/** Pack one built package into the catalog at `outDir`; returns the entry it wrote. */
-export async function packIntoCatalog(input: {
+/** The release already in `outDir`, if it is one of the kit's schema; else a new one of `name`. */
+async function readRelease(kit: Kit, outDir: string, name: string, owner: string): Promise<Release> {
+  const { releaseFile, schema } = kit.tools.marketplace
+  try {
+    const parsed = JSON.parse(await fs.readFile(join(outDir, releaseFile), 'utf8')) as Release
+    if (parsed.schema === schema && Array.isArray(parsed.apps))
+      return { ...parsed, owner: { name: owner } }
+  } catch {
+    // No release yet.
+  }
+  return { schema, name: marketplaceNameOf(name), owner: { name: owner }, apps: [] }
+}
+
+/** Pack one built package's archive and media into `outDir`; returns its marketplace entry. */
+export async function packApp(input: {
   kit: Kit
   packageDir: string
   outDir: string
-  publisher: string
-}): Promise<CatalogApp> {
+}): Promise<PackedApp> {
   const { kit, packageDir, outDir } = input
   const manifest = JSON.parse(await fs.readFile(join(packageDir, MANIFEST_FILE), 'utf8')) as Record<
     string,
@@ -137,9 +157,9 @@ export async function packIntoCatalog(input: {
   const name = text(manifest.name)
   const version = text(manifest.version)
   if (!name) throw new UserError(`${MANIFEST_FILE} names no app`)
-  if (!version) throw new UserError(`${name} has no version; a catalog app must declare one`)
+  if (!version) throw new UserError(`${name} has no version; a published app must declare one`)
   const read = (path: string) => readAppFile(packageDir, path)
-  // A catalog shows every app by its icon: refuse to publish one without a valid icon.
+  // The Store shows every app by its icon: refuse to publish one without a valid icon.
   const problems = await kit.tools.manifest.checkMedia(mediaFields(manifest), read, {
     requireIcon: true,
   })
@@ -154,7 +174,7 @@ export async function packIntoCatalog(input: {
     { compress: 'gzip' },
   ).bytes()
   const sha256 = sha256Of(bytes)
-  // The hash in the name: a client holding an older catalog asks for a file that is gone (404),
+  // The hash in the name: a client holding an older release asks for a file that is gone (404),
   // never for one whose bytes changed under the same name.
   const archive = `${name}-${version}-${sha256.slice(0, 12)}.tar.gz`
   await fs.writeFile(join(outDir, archive), bytes)
@@ -162,7 +182,7 @@ export async function packIntoCatalog(input: {
   const app = { name, version }
   const iconPath = manifest.icon as string
   const iconExt = extensionOf(iconPath)
-  const entry: CatalogApp = {
+  const entry: PackedApp = {
     name,
     ...(text(manifest.displayName) ? { displayName: manifest.displayName } : {}),
     description: text(manifest.description) ?? '',
@@ -196,19 +216,40 @@ export async function packIntoCatalog(input: {
   if (homepage) entry.homepage = homepage
   const author =
     text(manifest.author) ?? text((manifest.author as { name?: unknown } | undefined)?.name)
-  if (author) entry.author = { name: author }
+  if (author) entry.author = author
   if (Array.isArray(manifest.surfaces)) entry.surfaces = manifest.surfaces
   const commands = Object.keys((manifest.commands as Record<string, unknown> | undefined) ?? {})
   if (commands.length) entry.commands = commands
   const opens = fileAssociationsOf(manifest.fileAssociations)
   if (opens.length) entry.fileAssociations = opens
 
-  // The publisher owns the catalog: Localix lists its apps as theirs.
-  const catalog = await readCatalog(outDir, name, input.publisher)
-  catalog.apps = [...catalog.apps.filter((other) => other.name !== name), entry].sort((a, b) =>
-    String(a.name).localeCompare(String(b.name)),
+  return entry
+}
+
+/** Pack one built package into the marketplace released at `outDir`; returns its entry. */
+export async function packIntoMarketplace(input: {
+  kit: Kit
+  packageDir: string
+  outDir: string
+  publisher: string
+  now?: () => Date
+}): Promise<PackedApp> {
+  const entry = await packApp(input)
+  // The publisher keeps the marketplace: Localix lists its apps as theirs.
+  const release = await readRelease(input.kit, input.outDir, entry.name, input.publisher)
+  release.published = (input.now?.() ?? new Date()).toISOString()
+  release.apps = [...release.apps.filter((other) => other.name !== entry.name), entry].sort(
+    (a, b) => String(a.name).localeCompare(String(b.name)),
   )
-  await fs.writeFile(join(outDir, CATALOG_FILE), `${JSON.stringify(catalog, null, 2)}\n`)
+  const read = input.kit.tools.marketplace.read(release)
+  if (read.kind !== 'marketplace')
+    throw new UserError(
+      `The packed marketplace would not read in Localix: ${read.kind === 'invalid' ? read.problem : `schema ${read.schema}`}`,
+    )
+  await fs.writeFile(
+    join(input.outDir, input.kit.tools.marketplace.releaseFile),
+    `${JSON.stringify(release, null, 2)}\n`,
+  )
   return entry
 }
 
@@ -216,7 +257,7 @@ export async function packIntoCatalog(input: {
 const ASSOCIATION_FIELDS = ['ext', 'name', 'description', 'mimeType', 'role', 'rank']
 
 /**
- * The kinds of file the app opens, copied into its catalog entry: Localix offers the app when a
+ * The kinds of file the app opens, copied into its marketplace entry: Localix offers the app when a
  * person opens a file of one of them and nothing they have opens it. The kit checked the manifest,
  * so this only keeps the declared fields.
  */

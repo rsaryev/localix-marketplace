@@ -9,7 +9,7 @@ const tempDir = tempDirPerTest('template-layout-')
 const scaffold: TemplateScaffold = {
   summary: 'Daily Log reference mini app',
   domainName: 'Daily Log',
-  entry: ['mini-app.json', 'icon.svg'],
+  entry: ['.localix-mini-app/mini-app.json', 'icon.svg'],
   domain: ['backend/entries.ts'],
   patterns: [],
   authoringOnly: [],
@@ -30,7 +30,7 @@ function templateAndCopy(copy: Record<string, string>) {
   const app = join(root, 'meal-log')
   writeTree(template, { 'icon.svg': ICON })
   writeTree(app, {
-    'mini-app.json': '{"name":"meal-log"}',
+    '.localix-mini-app/mini-app.json': '{"name":"meal-log"}',
     'icon.svg': ICON,
     'backend/index.test.ts': "test('logs', () => {})\n",
     ...copy,

@@ -19,7 +19,7 @@ semantic search — is the SDK's app layer (`createMiniApp`, `defineCollection`,
 
 | Location              | Responsibility                                                          |
 | --------------------- | ----------------------------------------------------------------------- |
-| `mini-app.json`       | Identity, category, the settings (`DAILY_GOAL`, `UNIT`) and the backend |
+| `.localix-mini-app/mini-app.json` | Identity, category, the settings (`DAILY_GOAL`, `UNIT`) and the backend |
 | `guide.md`            | What the agent reads before it first uses the app                       |
 | `icon.svg`            | Its icon in the store, the rail and its Mac app                         |
 | `shared/model.ts`     | The entry schema and the summary the screen shows and the agent is told |

@@ -1,9 +1,10 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 
+import { MANIFEST_FILE as MINI_APP_MANIFEST_FILE } from '../lib/manifest-file'
+
 /** The template's own description of its layout (entry, domain, renames). */
 export const TEMPLATE_SCAFFOLD_FILE = 'scaffold.json'
-const MINI_APP_MANIFEST_FILE = 'mini-app.json'
 
 /**
  * What a copy of the reference mini app is made of, and what a finished copy must no longer contain.

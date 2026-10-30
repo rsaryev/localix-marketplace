@@ -1,21 +1,24 @@
 # Mini apps
 
 The source of Localix's first-party mini apps. A mini app is Localix's own format, not a Claude Code
-plugin: one `mini-app.json` (identity, category, backend, settings, commands), a `guide.md` the
+plugin: one `.localix-mini-app/mini-app.json` (identity, category, backend, settings, commands), a
+`guide.md` the
 agent reads with `MiniAppGuide` before it first uses the app, a native backend (`backend/`) and
 screens (`ui/`). It holds no `skills/`, `.claude-plugin/` or hooks; see
 [plugins and mini apps](https://github.com/rsaryev/localix/blob/main/docs/internals/plugins-and-mini-apps.md).
 
-Localix ships none of them. [`.mini-app/marketplace.json`](../.mini-app/marketplace.json) lists
-them, in the shape of [`.claude-plugin/marketplace.json`](../.claude-plugin/marketplace.json): each
-app's `source` is its folder here. A tag `v*` of this repository releases them as one catalog,
-`mini-app-catalog.json` (`bun run pack`, which runs `mini-app marketplace build`), which Localix
-trusts: they install from its Store (**Mini apps**) like any other. Localix's picks are its
-`metadata.localix`: the apps the store features (`featured`) and installs on its own on a new
-installation (`recommended`), Discover's `collections`, and what each app is for (`suits`: file
-names such as `*.sql` or `compose.yaml`, where `*` stands for any characters, and packages a project
-depends on, such as `pg`), so Localix recommends the app when one of them is open or in the project.
-A pick that names no app here fails `mini-app marketplace validate`. Each app's guide for people
+Localix ships none of them.
+[`.localix-mini-app/marketplace.json`](../.localix-mini-app/marketplace.json) lists them, in the
+shape of [`.claude-plugin/marketplace.json`](../.claude-plugin/marketplace.json): each app's
+`source` is its folder here. A tag `v*` of this repository releases them as one signed marketplace,
+`mini-app-marketplace.json` (`bun run pack`, which runs `mini-app marketplace build`), which Localix
+trusts: they install from its Store (**Mini apps**) as `<app>@localix`, like any other. The
+marketplace's curation, which Localix takes from this marketplace alone, is on each app's entry:
+`featured` (Discover's carousel), `installByDefault` (installed on its own on a new installation)
+and `suggestFor` (file names such as `*.sql` or `compose.yaml`, where `*` stands for any characters,
+and packages a project depends on, such as `pg`, so Localix suggests the app when one of them is
+open or in the project); `collections` are Discover's rows. A collection item that names no app here
+fails `mini-app marketplace validate --curation`. Each app's guide for people
 using it is in its `docs/` folder; [games](../docs/games.md) and the [recipes](../docs/recipes/)
 span several.
 

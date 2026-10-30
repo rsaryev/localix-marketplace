@@ -52,9 +52,9 @@ describe('the release workflow', () => {
 
   test('releases on a version tag only, and refuses a tag that is not the version', async () => {
     expect(workflow('0.1.0').on.push.tags).toEqual(['v*'])
-    const guard = step('The tag is the version in mini-app.json').run!
+    const guard = step('The tag is the version in its manifest').run!
     const dir = tempDir()
-    writeTree(dir, { 'app/mini-app.json': JSON.stringify({ version: '0.2.0' }) })
+    writeTree(dir, { 'app/.localix-mini-app/mini-app.json': JSON.stringify({ version: '0.2.0' }) })
     const run = async (tag: string) => {
       const child = Bun.spawn(['sh', '-c', guard], {
         cwd: dir,
@@ -73,18 +73,18 @@ describe('the release workflow', () => {
 })
 
 describe('signing a release', () => {
-  test('the packed catalog is signed with the repository secret, before it is released', () => {
+  test('the packed marketplace is signed with the repository secret, before it is released', () => {
     const names = workflow('0.1.0').jobs.build.steps.map((s) => s.name)
-    expect(names.indexOf('Sign the catalog')).toBeGreaterThan(names.indexOf('Check and pack'))
-    expect(names.indexOf('Sign the catalog')).toBeLessThan(names.indexOf('Release'))
-    const sign = step('Sign the catalog', '0.1.0')
+    expect(names.indexOf('Sign the marketplace')).toBeGreaterThan(names.indexOf('Check and pack'))
+    expect(names.indexOf('Sign the marketplace')).toBeLessThan(names.indexOf('Release'))
+    const sign = step('Sign the marketplace', '0.1.0')
     expect(sign.env?.MINI_APP_SIGNING_KEY).toBe('${{ secrets.MINI_APP_SIGNING_KEY }}')
-    expect(sign.run).toContain('sign catalog')
+    expect(sign.run).toContain('sign marketplace')
   })
 
   // A repository without the secret still releases, unsigned, and says so in the run.
   test('without the secret the release goes out unsigned, with a notice', async () => {
-    const child = Bun.spawn(['sh', '-c', step('Sign the catalog', '0.1.0').run!], {
+    const child = Bun.spawn(['sh', '-c', step('Sign the marketplace', '0.1.0').run!], {
       env: { ...process.env, MINI_APP_SIGNING_KEY: '' },
       stdout: 'pipe',
       stderr: 'pipe',

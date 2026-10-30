@@ -10,7 +10,7 @@ const KEY =
 // The app's folder becomes a public repository: a signing key copied into it is published with it.
 test('a private key anywhere in the app is reported, whatever the file is called', async () => {
   const dir = tempDir()
-  writeTree(dir, { 'mini-app.json': '{}', 'notes/key.txt': KEY, 'signing.pem': KEY })
+  writeTree(dir, { '.localix-mini-app/mini-app.json': '{}', 'notes/key.txt': KEY, 'signing.pem': KEY })
   const problems = await checkMiniAppSecrets(dir)
   expect(problems).toHaveLength(2)
   expect(problems[0]).toContain('notes/key.txt')
@@ -19,7 +19,7 @@ test('a private key anywhere in the app is reported, whatever the file is called
 
 test('an app with no private key passes', async () => {
   const dir = tempDir()
-  writeTree(dir, { 'mini-app.json': '{}', 'ui/App.tsx': 'export const App = () => null\n' })
+  writeTree(dir, { '.localix-mini-app/mini-app.json': '{}', 'ui/App.tsx': 'export const App = () => null\n' })
   expect(await checkMiniAppSecrets(dir)).toEqual([])
 })
 

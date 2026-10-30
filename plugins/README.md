@@ -22,9 +22,12 @@ claude plugin marketplace add rsaryev/localix-marketplace
 claude plugin install mini-app-authoring@localix
 ```
 
-Under `metadata.localix` the marketplace also says what Localix's Store does with them:
-`recommended`, `collections`, and `suits` — by plugin name, the files and dependencies a project has
-when the plugin is worth recommending (`mini-app.json` for `mini-app-authoring`).
+Each plugin's `localix` key also says what Localix's Store does with it — `featured`,
+`installByDefault` (installed on its own on a new installation) and `suggestFor`, the files and
+dependencies a project has when the plugin is worth suggesting (`mini-app.json` for
+`mini-app-authoring`) — and `metadata.localix.collections` holds Discover's rows, where a mini app is
+named by its identity (`mini-app:code-graph@localix`). Claude Code ignores both; Localix reads them
+from this marketplace only.
 
 A change reaches people when they update the plugin, so raise its `version` with each change.
 

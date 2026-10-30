@@ -6,7 +6,7 @@ domain. It lives in the plugin it ships with and is checked like any mini app in
 
 What a copy is made of is declared in `scaffold.json`, and every part of it is load-bearing:
 
-- **Entry** — same path and export in every copy, body replaced: `mini-app.json`, `guide.md`,
+- **Entry** — same path and export in every copy, body replaced: `.localix-mini-app/mini-app.json`, `guide.md`,
   `icon.svg`, `backend/index.ts` (`register`), `ui/register.tsx` (`registerUi`).
 - **Domain** — Daily Log itself, replaced by each copy. Its identifiers on `domainTokens` are the
   residue the plugin's check reports; one a copy may rightly keep (`{snake}_summary`) is not listed.

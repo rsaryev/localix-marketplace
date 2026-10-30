@@ -6,22 +6,19 @@
   "metadata": {
     "description": "Localix's own Claude Code plugins and mini apps. Localix trusts this marketplace and adds it on first start; in Claude Code, add it with claude plugin marketplace add rsaryev/localix-marketplace.",
     "localix": {
-      "recommended": ["mini-app-authoring", "team"],
       "collections": [
         {
           "id": "build-for-localix",
           "title": "Build for Localix",
           "subtitle": "Create a mini app with the agent, then check, install and share it",
           "style": "row",
-          "items": ["mini-app-authoring", "mini-app:code-graph", "mini-app:api"]
+          "items": [
+            "mini-app-authoring",
+            "mini-app:code-graph@localix",
+            "mini-app:api@localix"
+          ]
         }
-      ],
-      "suits": {
-        "mini-app-authoring": {
-          "files": ["mini-app.json"],
-          "dependencies": ["@localixai/mini-app-sdk", "@localixai/kit"]
-        }
-      }
+      ]
     }
   },
   "plugins": [
@@ -33,7 +30,19 @@
         "name": "Localix"
       },
       "category": "development",
-      "homepage": "https://github.com/rsaryev/localix-marketplace/tree/main/plugins/mini-app-authoring"
+      "homepage": "https://github.com/rsaryev/localix-marketplace/tree/main/plugins/mini-app-authoring",
+      "localix": {
+        "installByDefault": true,
+        "suggestFor": {
+          "files": [
+            "mini-app.json"
+          ],
+          "dependencies": [
+            "@localixai/mini-app-sdk",
+            "@localixai/kit"
+          ]
+        }
+      }
     },
     {
       "name": "team",
@@ -43,7 +52,10 @@
         "name": "Localix"
       },
       "category": "development",
-      "homepage": "https://github.com/rsaryev/localix-marketplace/tree/main/plugins/team"
+      "homepage": "https://github.com/rsaryev/localix-marketplace/tree/main/plugins/team",
+      "localix": {
+        "installByDefault": true
+      }
     }
   ]
 }

@@ -3,6 +3,7 @@ import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 import { UserError } from '../lib/errors'
+import { MANIFEST_FILE } from '../lib/manifest-file'
 
 /** The reference mini app every scaffold forks: this plugin's `template/`. */
 export const PLUGIN_TEMPLATE = resolve(import.meta.dir, '../../template')
@@ -17,11 +18,13 @@ export const PLUGIN_TEMPLATE = resolve(import.meta.dir, '../../template')
  * judges it. Everything else (scaffold, builds, checks, packing) is this toolchain's.
  *
  * `kit.json` describes it; `authoring.version` is the contract this file reads. A kit without that
- * block was staged for an older Localix, whose app built mini apps itself.
+ * block was staged for an older Localix, whose app built mini apps itself. Version 2: the manifest
+ * is `.localix-mini-app/mini-app.json`, and `tools.marketplace` holds the rules of a mini app
+ * marketplace, so one is checked, built and signed here exactly as Localix reads and verifies it.
  */
 
 export const KIT_MANIFEST = 'kit.json'
-export const KIT_AUTHORING_VERSION = 1
+export const KIT_AUTHORING_VERSION = 2
 
 export interface KitAuthoring {
   version: typeof KIT_AUTHORING_VERSION
@@ -107,9 +110,22 @@ export interface TailwindCompiler {
   build(candidates: string[]): string
 }
 
+/** A released marketplace as Localix reads it: its own, a newer format, or not one at all. */
+export type MarketplaceRead =
+  | {
+      kind: 'marketplace'
+      marketplace: {
+        name: string
+        owner: { name: string }
+        apps: { name: string; version?: string; source?: { source: string } }[]
+      }
+    }
+  | { kind: 'newer'; schema: number }
+  | { kind: 'invalid'; problem: string }
+
 /** What the kit's `tools` module exports: Localix's own rules, as Localix applies them. */
 export interface KitTools {
-  version: 1
+  version: 2
   manifest: {
     file: string
     /**
@@ -122,9 +138,29 @@ export interface KitTools {
       read: (path: string) => Promise<Uint8Array | null>,
       options: { requireIcon: boolean },
     ): Promise<string[]>
-    /** File extension → media type a catalog serves an icon or a screenshot as. */
+    /** File extension → media type a marketplace serves an icon or a screenshot as. */
     iconTypes: Readonly<Record<string, string>>
     screenshotTypes: Readonly<Record<string, string>>
+  }
+  marketplace: {
+    /** Where a repository keeps the marketplace its keeper writes. */
+    file: string
+    /** The released file Localix reads, with its signatures at `<releaseFile><signatureSuffix>`. */
+    releaseFile: string
+    signatureSuffix: string
+    schema: number
+    /** Every problem with a marketplace as written, each as what to fix; `curation` for Localix's. */
+    problems(raw: unknown, check: { curation: boolean }): string[]
+    /** A released marketplace as Localix reads it. */
+    read(raw: unknown): MarketplaceRead
+    /** The signature file of a release's exact bytes, one signature per private key. */
+    sign(bytes: Uint8Array, privateKeys: readonly string[]): string
+    /** The keys whose signatures in a signature file hold for `bytes`. */
+    verify(bytes: Uint8Array, text: string): { keys: string[] } | { problem: string }
+    /** The public key (base64) of a private key. */
+    publicKeyOf(privateKey: string): string
+    /** The release a GitHub repository's marketplace is read from. */
+    githubUrl(repo: string): string
   }
   ui: {
     artifactDir: string
@@ -197,8 +233,13 @@ export async function loadKit(dir: string): Promise<Kit> {
   const module = (await import(pathToFileURL(join(dir, manifest.authoring.tools)).href)) as {
     tools?: KitTools
   }
-  if (module.tools?.version !== 1) {
+  if (module.tools?.version !== KIT_AUTHORING_VERSION) {
     throw new UserError(`The mini app kit at ${dir} carries no tools this toolchain can read.`)
+  }
+  if (module.tools.manifest.file !== MANIFEST_FILE) {
+    throw new UserError(
+      `The mini app kit at ${dir} keeps the manifest at ${module.tools.manifest.file}; this toolchain reads ${MANIFEST_FILE}. Update the plugin.`,
+    )
   }
   return {
     dir,

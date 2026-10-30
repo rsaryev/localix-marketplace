@@ -13,8 +13,8 @@ describe('parseArgs', () => {
   })
 
   test('takes --name=value and treats a value-less option as missing', () => {
-    const args = parseArgs(['pack', '--out=dist/catalog', '--publisher'])
-    expect(stringOption(args, 'out')).toBe('dist/catalog')
+    const args = parseArgs(['pack', '--out=dist/marketplace', '--publisher'])
+    expect(stringOption(args, 'out')).toBe('dist/marketplace')
     expect(stringOption(args, 'publisher')).toBeUndefined()
   })
 

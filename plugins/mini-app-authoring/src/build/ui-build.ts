@@ -56,7 +56,7 @@ const isHashedFile = (file: string) => file.startsWith('chunks/') || file.starts
  * Build `<miniAppDir>`'s UI into `outDir`, which must not exist yet. Returns the manifest, or null
  * for a mini app without a UI entry.
  *
- * `sourceMaps` defaults on: a mini app is debugged where it is built. A catalog release may turn
+ * `sourceMaps` defaults on: a mini app is debugged where it is built. A marketplace release may turn
  * them off.
  */
 export async function buildMiniAppUi(input: {

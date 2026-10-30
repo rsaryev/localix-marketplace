@@ -34,12 +34,24 @@ describe('mini-app', () => {
   test('a folder that is not a mini app is said plainly, without a stack', async () => {
     const { context, output } = cli()
     expect(await runCli(['check'], context)).toBe(1)
-    expect(output()).toMatch(/is not a mini app: it has no readable mini-app\.json\.$/u)
+    expect(output()).toMatch(
+      /is not a mini app: it has no readable \.localix-mini-app\/mini-app\.json\.$/u,
+    )
+  })
+
+  // Earlier mini apps kept the manifest at the folder's root; Localix no longer reads it there.
+  test('a manifest at the folder’s root is said to move into .localix-mini-app/', async () => {
+    const { context, output } = cli()
+    writeTree(context.cwd, { 'mini-app.json': '{"name":"meal-log"}' })
+    expect(await runCli(['check'], context)).toBe(1)
+    expect(output()).toContain(
+      'keeps its manifest at mini-app.json; move it to .localix-mini-app/mini-app.json',
+    )
   })
 
   test('validate judges a package folder and fails on its problems', async () => {
     const dir = tempDir()
-    writeTree(dir, { 'mini-app.json': '{"name":"gpu-monitor","backend":"./backend/index.ts"}' })
+    writeTree(dir, { '.localix-mini-app/mini-app.json': '{"name":"gpu-monitor","backend":"./backend/index.ts"}' })
     const { context, output } = cli(dir)
     expect(await runCli(['validate', '.'], context)).toBe(1)
     expect(output()).toContain('backend ./backend/index.ts is a source file')
@@ -47,7 +59,7 @@ describe('mini-app', () => {
 
   test('pack asks who publishes the app before building anything', async () => {
     const dir = tempDir()
-    writeTree(dir, { 'mini-app.json': '{"name":"gpu-monitor"}' })
+    writeTree(dir, { '.localix-mini-app/mini-app.json': '{"name":"gpu-monitor"}' })
     const { context, output } = cli(dir)
     expect(await runCli(['pack'], context)).toBe(1)
     expect(output()).toContain('--publisher')
@@ -55,7 +67,7 @@ describe('mini-app', () => {
 
   test('ci sets the app up to be released from GitHub, built with its Localix', async () => {
     const dir = tempDir()
-    writeTree(dir, { 'mini-app.json': '{"name":"meal-log","displayName":"Meal Log"}' })
+    writeTree(dir, { '.localix-mini-app/mini-app.json': '{"name":"meal-log","displayName":"Meal Log"}' })
     const { context, output } = cli(dir)
     const kit = fakeKit()
     kit.manifest.localixVersion = '0.1.0-beta.18'
@@ -67,25 +79,25 @@ describe('mini-app', () => {
     expect(await runCli(['ci', '--publisher', 'rsaryev'], context)).toBe(0)
     const workflow = await Bun.file(`${dir}/.github/workflows/mini-app.yml`).text()
     expect(workflow).toContain('releases/download/v0.1.0-beta.18')
-    expect(await Bun.file(`${dir}/mini-app.json`).json()).toMatchObject({ author: 'rsaryev' })
+    expect(await Bun.file(`${dir}/.localix-mini-app/mini-app.json`).json()).toMatchObject({ author: 'rsaryev' })
     expect(await Bun.file(`${dir}/.gitignore`).text()).toContain('tsconfig.json')
     expect(output()).toContain('git tag v')
 
     // Named again, the publisher replaces the one kept, such as an app's copied "Localix".
     expect(await runCli(['ci', '--publisher', 'Ada'], context)).toBe(0)
-    expect(await Bun.file(`${dir}/mini-app.json`).json()).toMatchObject({ author: 'Ada' })
+    expect(await Bun.file(`${dir}/.localix-mini-app/mini-app.json`).json()).toMatchObject({ author: 'Ada' })
   })
 
   // The Store's page of the app, installed from its folder or from the catalog, links there.
   test('ci keeps the repository the app is released from in mini-app.json', async () => {
     const dir = tempDir()
-    writeTree(dir, { 'mini-app.json': '{"name":"meal-log","author":"rsaryev"}' })
+    writeTree(dir, { '.localix-mini-app/mini-app.json': '{"name":"meal-log","author":"rsaryev"}' })
     const { context } = cli(dir)
     const kit = fakeKit()
     context.kit = async () => ({ kit, source: { dir: '/kit', from: 'named' } })
 
     expect(await runCli(['ci', '--repository', 'rsaryev/meal-log'], context)).toBe(0)
-    expect(await Bun.file(`${dir}/mini-app.json`).json()).toMatchObject({
+    expect(await Bun.file(`${dir}/.localix-mini-app/mini-app.json`).json()).toMatchObject({
       author: 'rsaryev',
       repository: 'https://github.com/rsaryev/meal-log',
     })
@@ -124,7 +136,7 @@ describe('mini-app', () => {
   // A development Localix implements a contract no release's kit carries.
   test('kit --update says how to build against a checkout when no release matches', async () => {
     const dir = tempDir()
-    writeTree(dir, { 'mini-app.json': '{"name":"meal-log"}' })
+    writeTree(dir, { '.localix-mini-app/mini-app.json': '{"name":"meal-log"}' })
     const { context, output } = cli(dir)
     context.updateKit = async (appDir) => {
       const kit = fakeKit()
@@ -147,7 +159,7 @@ describe('mini-app', () => {
 
   test('kit --update installs a release’s kit into the app', async () => {
     const dir = tempDir()
-    writeTree(dir, { 'mini-app.json': '{"name":"meal-log"}' })
+    writeTree(dir, { '.localix-mini-app/mini-app.json': '{"name":"meal-log"}' })
     const { context, output } = cli(dir)
     const asked: unknown[] = []
     context.updateKit = async (appDir, version) => {

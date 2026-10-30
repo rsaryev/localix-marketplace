@@ -8,6 +8,7 @@ import { buildMiniAppUi } from '../build/ui-build'
 import type { Kit } from '../kit/kit'
 import { writeKitCatalog } from '../kit/kit-files'
 import { errorMessage } from '../lib/errors'
+import { MANIFEST_FILE } from '../lib/manifest-file'
 import { runBun } from '../lib/run-bun'
 import { findTemplateResidue, listFiles, loadTemplateScaffold } from '../scaffold/template-layout'
 import { checkMiniAppBindings } from './bindings'
@@ -24,7 +25,7 @@ import { typecheckMiniApp, writeMiniAppTsconfig } from './typecheck'
  * and one to-do list rather than a guess at which scripts exist.
  *
  * The builds write to a candidate folder that becomes the package only when the caller asks for it
- * and every step but the store media passed (the media matter to a catalog, not to running): a
+ * and every step but the store media passed (the media matter to a marketplace, not to running): a
  * failed check never replaces the last good package.
  */
 
@@ -64,7 +65,7 @@ export const STORE_MEDIA_STEP = 'store media'
 const TEST_TIMEOUT_MS = 120_000
 const OUTPUT_TAIL_LINES = 60
 const TEST_FILE = /\.test\.tsx?$/u
-export const MANIFEST_FILE = 'mini-app.json'
+export { MANIFEST_FILE }
 
 function tail(output: string): string[] {
   return output.trimEnd().split('\n').slice(-OUTPUT_TAIL_LINES)

@@ -1,4 +1,5 @@
 import type { Kit } from '../kit/kit'
+import { MANIFEST_FILE } from '../lib/manifest-file'
 import { AGENT_PARTNERSHIP, APP_LAYER, BEYOND_COLLECTIONS, DESIGN_BRIEF } from './contract'
 import { copyDomain, fillPlaceholders, type TemplateScaffold } from './template-layout'
 
@@ -43,7 +44,7 @@ storage, live updates, search — is the SDK's.
 \`mini-app check\` runs every check; \`mini-app build\` also packages it into \`dist/package/\`, and
 \`mini-app install\` puts that package into a running Localix, which swaps it in place. Open
 **${input.displayName}** from the workspace overflow menu or the command palette. \`mini-app pack\`
-makes a catalog to share it.
+makes a marketplace to share it.
 `
 }
 
@@ -71,7 +72,7 @@ ${DESIGN_BRIEF}
 
 House rules:
 
-- The entries keep their path and export: ${scaffold.entry.join(', ')}. \`mini-app.json\` names the
+- The entries keep their path and export: ${scaffold.entry.join(', ')}. \`${MANIFEST_FILE}\` names the
   app, its settings (\`config\`) and its backend (\`./backend/index.ts\`; the package's copy names its
   bundle under \`${BACKEND_OUT_DIR}/\`). \`guide.md\` tells the agent which tool does what and what to
   tell the person. A mini app holds no Claude Code plugin — no \`skills/\`, \`.claude-plugin/\` or hooks.
@@ -126,7 +127,7 @@ export function agentInstruction(input: {
     [
       'Steps:',
       `1. READ in one batch: ${[
-        'mini-app.json',
+        MANIFEST_FILE,
         'guide.md',
         ...scaffold.patterns.map((p) => p.file),
       ]
@@ -137,7 +138,7 @@ export function agentInstruction(input: {
         )}. They are short and each is the pattern for its part. Nothing else: AGENTS.md repeats this message, and ${KIT_CATALOG_FILE} is searched for a job, not read whole.`,
       ...scaffold.patterns.map((p) => `   - ${p.use}: ${p.file} (at "${p.anchor}")`),
       `2. DECIDE, before writing: the items and their fields, the tools the agent needs (one per thing the person does), what the screen shows first (the hero number), and the defaults. Then write ${at('shared/model.ts')} — schemas and pure logic — first.`,
-      `3. WRITE the rest in one batch: the collection spec, tools and register in backend/, the screen in ui/App.tsx and ui/parts/, ui/register.tsx (title, Icon, agentContext with the tool names), mini-app.json (description, category, tags, config) and guide.md. Name each new file after what it holds (backend/<items>.ts, ui/parts/<Item>List.tsx) and import it by that name; in the same batch remove the ${scaffold.domainName} files named after its items — ${domainNamedFiles(scaffold).map(at).join(', ')} — with one rm. Never mv a template file after writing into it: its importers keep the old path. No identifier of the old domain may survive (${scaffold.domainTokens.slice(0, 3).map(fill).join(', ')}, …). README.md and AGENTS.md are written; leave them.`,
+      `3. WRITE the rest in one batch: the collection spec, tools and register in backend/, the screen in ui/App.tsx and ui/parts/, ui/register.tsx (title, Icon, agentContext with the tool names), ${MANIFEST_FILE} (description, category, tags, config) and guide.md. Name each new file after what it holds (backend/<items>.ts, ui/parts/<Item>List.tsx) and import it by that name; in the same batch remove the ${scaffold.domainName} files named after its items — ${domainNamedFiles(scaffold).map(at).join(', ')} — with one rm. Never mv a template file after writing into it: its importers keep the old path. No identifier of the old domain may survive (${scaffold.domainTokens.slice(0, 3).map(fill).join(', ')}, …). README.md and AGENTS.md are written; leave them.`,
       `4. TEST with bun:test: each tool through callTool, the screen's routes through requestRoute, and the shared logic directly. Then draw the icon: mini-app icon ${dir} --glyph '<path d="…"/>'.`,
       `5. CHECK with \`mini-app check ${dir}\`: leftovers, house style, both builds, types against the SDK and kit, tests — every problem one line with its file:line, all in one report. Fix them all, then check again.`,
       `6. INSTALL with \`mini-app install ${dir}\`: it builds the package and puts it into the running Localix. Without Localix on this computer, \`mini-app build ${dir}\` leaves the package in ${dir}/dist/package and \`mini-app get-localix\` installs Localix — say so instead.`,

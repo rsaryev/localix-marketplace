@@ -1,7 +1,7 @@
 {
   "name": "mini-app-authoring",
   "displayName": "Localix mini apps",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Create, build, check, install and share Localix mini apps from Claude Code or Localix.",
   "author": {
     "name": "Localix"
@@ -9,5 +9,5 @@
   "homepage": "https://github.com/rsaryev/localix-marketplace/tree/main/plugins/mini-app-authoring",
   "repository": "https://github.com/rsaryev/localix",
   "license": "MIT",
-  "keywords": ["localix", "mini-apps", "scaffold", "catalog"]
+  "keywords": ["localix", "mini-apps", "scaffold", "marketplace"]
 }

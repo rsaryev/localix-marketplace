@@ -12,9 +12,11 @@ import { kitDir, ROOT } from './kit'
  * about to publish (`MINI_APP_KIT=<kit>`), where Claude Code is not installed.
  *
  * Named `plugins`, or with nothing named, it first checks the plugins: the authoring plugin's
- * types and tests and this repository's `.mini-app/marketplace.json`, then Claude Code's validation — each plugin with `--strict`, the marketplace
- * without it, because its `metadata.localix` (Localix's recommendations and collections) is a field
- * Claude Code does not know and ignores at load time.
+ * types and tests and this repository's `.localix-mini-app/marketplace.json` with Localix's own
+ * rules (the kit's, curation allowed: this is the Localix marketplace), then Claude Code's
+ * validation — each plugin with `--strict`, the marketplace without it, because its Localix
+ * curation (`plugins[].localix`, `metadata.localix.collections`) is a field Claude Code does not
+ * know and ignores at load time.
  */
 const MINI_APPS = join(ROOT, 'mini-apps')
 const TEMPLATE = join(ROOT, 'plugins', 'mini-app-authoring', 'template')
@@ -24,9 +26,11 @@ const onlyMiniApps = process.argv.includes('mini-apps')
 const named = process.argv.slice(2).filter((name) => name !== 'mini-apps')
 const PLUGINS = join(ROOT, 'plugins')
 
+const env = { ...process.env, MINI_APP_KIT: await kitDir() }
+
 function step(cmd: string[], cwd = ROOT): boolean {
   console.log(`$ ${cmd.join(' ')}`)
-  return Bun.spawnSync(cmd, { cwd, stdout: 'inherit', stderr: 'inherit' }).exitCode === 0
+  return Bun.spawnSync(cmd, { cwd, env, stdout: 'inherit', stderr: 'inherit' }).exitCode === 0
 }
 
 function checkPlugins(): boolean {
@@ -40,7 +44,7 @@ function checkPlugins(): boolean {
   return [
     step(['bun', 'run', 'type-check'], join(PLUGINS, 'mini-app-authoring')),
     step(['bun', 'run', 'test:plugins']),
-    step([TOOL, 'marketplace', 'validate']),
+    step([TOOL, 'marketplace', 'validate', '--curation']),
     ...plugins.map((plugin) => step(['claude', 'plugin', 'validate', '--strict', plugin])),
     step(['claude', 'plugin', 'validate', '.']),
   ].every(Boolean)
@@ -54,7 +58,7 @@ const apps = named.filter((name) => name !== 'plugins')
 if (named.length && !apps.length) process.exit(0)
 const all = [
   ...readdirSync(MINI_APPS)
-    .filter((name) => existsSync(join(MINI_APPS, name, 'mini-app.json')))
+    .filter((name) => existsSync(join(MINI_APPS, name, '.localix-mini-app', 'mini-app.json')))
     .map((name) => join(MINI_APPS, name)),
   TEMPLATE,
 ]
@@ -62,7 +66,6 @@ const targets = apps.length
   ? all.filter((dir) => apps.some((name) => dir.endsWith(`/${name}`)))
   : all
 
-const env = { ...process.env, MINI_APP_KIT: await kitDir() }
 const failed: string[] = []
 for (const dir of targets) {
   const args = dir === TEMPLATE ? ['check', dir, '--template'] : ['check', dir]

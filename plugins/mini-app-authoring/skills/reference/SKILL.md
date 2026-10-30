@@ -13,7 +13,7 @@ allowed-tools: Bash(mini-app contract) Bash(${CLAUDE_PLUGIN_ROOT}/bin/mini-app c
 A **mini app** is Localix's own application format: screens for the person, a native backend, agent
 tools over Localix's APIs, a guide for the agent and commands with pickers. It is not a Claude Code
 plugin, and the two share nothing: never put `.claude-plugin/`, `skills/` or hooks in a mini app,
-and never put `mini-app.json` in a plugin.
+and never put `.localix-mini-app/` in a plugin.
 
 **Trust:** a mini app's backend runs unsandboxed in the Localix API process, and an installed one
 starts enabled, so keep its tools honest about their effects.
@@ -26,7 +26,8 @@ The toolchain is the `mini-app` command: `create`, `check`, `build`, `install`, 
 
 ```text
 my-app/
-  mini-app.json        name, version, apiVersion, category, backend, settings (config), commands
+  .localix-mini-app/
+    mini-app.json      name, version, apiVersion, category, backend, settings (config), commands
   guide.md             what the agent needs to know to use the app
   icon.svg             the app's icon in the store, the rail and its Mac app
   shared/model.ts      schemas and the logic the backend and the screen share

@@ -5,6 +5,7 @@ import { basename, dirname, join } from 'node:path'
 import type { Kit } from '../kit/kit'
 import { writeKitCatalog } from '../kit/kit-files'
 import { UserError } from '../lib/errors'
+import { MANIFEST_FILE as MINI_APP_MANIFEST_FILE } from '../lib/manifest-file'
 import { ensureGitignore } from '../publish/ci'
 import { agentsMd, readme } from './prose'
 import {
@@ -15,7 +16,6 @@ import {
   type TemplateScaffold,
 } from './template-layout'
 
-const MINI_APP_MANIFEST_FILE = 'mini-app.json'
 
 /**
  * Fork the kit's reference mini app into a new mini app at `dir`.

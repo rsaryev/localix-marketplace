@@ -3,6 +3,7 @@ import { constants, existsSync, promises as fs } from 'node:fs'
 import { dirname, join } from 'node:path'
 
 import { UserError } from '../lib/errors'
+import { MANIFEST_FILE as MINI_APP_MANIFEST } from '../lib/manifest-file'
 import { KIT_MANIFEST } from './kit'
 import type { KitSource } from './resolve'
 
@@ -15,7 +16,6 @@ import type { KitSource } from './resolve'
  */
 
 export const INSTALLED_KIT = join('node_modules', '@localixai', 'mini-app-kit')
-const MINI_APP_MANIFEST = 'mini-app.json'
 
 /**
  * Copy the kit at `kitDir` into `appDir`, replacing the one there; the installed folder.

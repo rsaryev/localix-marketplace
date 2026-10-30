@@ -3,6 +3,7 @@ import { join } from 'node:path'
 
 import { type LocalixPin, localixPin } from '../kit/resolve'
 import { UserError } from '../lib/errors'
+import { MANIFEST_FILE } from '../lib/manifest-file'
 
 /**
  * Publishing through GitHub: the mini app's repository carries its source, and a workflow builds and
@@ -48,15 +49,15 @@ export async function ensureGitignore(dir: string): Promise<string[]> {
   return added
 }
 
-/** The workflow: check every push and pull request; on a tag `v<version>`, release the catalog. */
+/** The workflow: check every push and pull request; on a tag `v<version>`, release the marketplace. */
 export function releaseWorkflow(input: { displayName: string; pin: LocalixPin }): string {
   const { displayName, pin } = input
   const tool = 'localix/plugins/mini-app-authoring/bin/mini-app'
   const onTag = "startsWith(github.ref, 'refs/tags/v')"
   return `# ${displayName}: checked on every push and pull request; a tag v<version> (the version in
-# mini-app.json) releases it. People add
-#   https://github.com/<owner>/<repo>/releases/latest/download/mini-app-catalog.json
-# in Localix's mini app store. Written by \`mini-app ci\`; run it again after updating Localix.
+# .localix-mini-app/mini-app.json) releases it as a mini app marketplace. People add <owner>/<repo>
+# in Localix: Store → Sources → Add source. Written by \`mini-app ci\`; run it again after
+# updating Localix.
 name: Mini app
 
 on:
@@ -90,40 +91,40 @@ jobs:
       - name: Check
         if: \${{ !${onTag} }}
         run: ${tool} check app
-      - name: The tag is the version in mini-app.json
+      - name: The tag is the version in its manifest
         if: \${{ ${onTag} }}
         run: |
-          version=$(bun -e "process.stdout.write((await Bun.file('app/mini-app.json').json()).version)")
+          version=$(bun -e "process.stdout.write((await Bun.file('app/${MANIFEST_FILE}').json()).version)")
           if [ "v$version" != "$GITHUB_REF_NAME" ]; then
-            echo "::error::The tag $GITHUB_REF_NAME is not v$version, the version in mini-app.json: tag v$version, or raise the version first."
+            echo "::error::The tag $GITHUB_REF_NAME is not v$version, the version in ${MANIFEST_FILE}: tag v$version, or raise the version first."
             exit 1
           fi
       - name: Check and pack
         if: \${{ ${onTag} }}
-        run: ${tool} pack app --out catalog
-      # Localix updates the app on its own only from a signed catalog: \`mini-app keygen\`, then
+        run: ${tool} pack app --out marketplace
+      # Localix updates the app on its own only from a signed marketplace: \`mini-app keygen\`, then
       # \`gh secret set MINI_APP_SIGNING_KEY\` with the key it made. Without it the release is unsigned.
-      - name: Sign the catalog
+      - name: Sign the marketplace
         if: \${{ ${onTag} }}
         env:
           MINI_APP_SIGNING_KEY: \${{ secrets.MINI_APP_SIGNING_KEY }}
         run: |
           if [ -z "$MINI_APP_SIGNING_KEY" ]; then
-            echo "::notice::The catalog is not signed: Localix updates this app only when people choose Update. Run mini-app keygen and set the MINI_APP_SIGNING_KEY secret to sign it."
+            echo "::notice::The marketplace is not signed: Localix updates this app only when people choose Update. Run mini-app keygen and set the MINI_APP_SIGNING_KEY secret to sign it."
           else
-            ${tool} sign catalog
+            ${tool} sign marketplace
           fi
       - name: Release
         if: \${{ ${onTag} }}
         env:
           GH_TOKEN: \${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" catalog/* --repo "$GITHUB_REPOSITORY" --title "${displayName.replaceAll('"', '')} $GITHUB_REF_NAME" --generate-notes
+        run: gh release create "$GITHUB_REF_NAME" marketplace/* --repo "$GITHUB_REPOSITORY" --title "${displayName.replaceAll('"', '')} $GITHUB_REF_NAME" --generate-notes
 `
 }
 
 /**
  * Set a mini app up to be released from GitHub: the workflow, the ignore file, and the publisher
- * kept as `author` in `mini-app.json` (the workflow packs with it). A named publisher replaces the
+ * kept as `author` in the manifest (the workflow packs with it). A named publisher replaces the
  * author kept; without one, the kept author stays. A named repository (`<owner>/<repo>` or its
  * address) is kept as `repository`: the Store's page of the app links there.
  */

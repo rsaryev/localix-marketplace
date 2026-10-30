@@ -3,7 +3,7 @@
   "summary": "Daily Log reference mini app (entries the agent logs from what the person says or shows, a daily goal from Settings, a screen with today's total, a 7-day chart and a quick-add form)",
   "domainName": "Daily Log",
   "entry": [
-    "mini-app.json",
+    ".localix-mini-app/mini-app.json",
     "guide.md",
     "icon.svg",
     "backend/index.ts",

@@ -1,7 +1,9 @@
 # The mini app format: manifest, guide, commands, store media
 
-## `mini-app.json`
+## `.localix-mini-app/mini-app.json`
 
+The manifest lives in `.localix-mini-app/` in the app's folder; every path in it (`icon`, `backend`,
+`screenshots`, `guide`) is relative to the app's folder, the one that holds `.localix-mini-app/`.
 The manifest is strict: unknown keys are refused, a plugin's `skills` or `hooks` among them.
 
 | Field                         | Meaning                                                                                                          |

@@ -1,4 +1,4 @@
-import { promises as fs } from 'node:fs'
+import { existsSync, promises as fs } from 'node:fs'
 import { join, resolve } from 'node:path'
 
 import { MANIFEST_FILE, type TestRunner } from '../check/check'
@@ -43,6 +43,11 @@ export async function readManifest(dir: string): Promise<Record<string, unknown>
       unknown
     >
   } catch {
+    // The layout before `.localix-mini-app/`: name the move rather than call it no app at all.
+    if (existsSync(join(dir, 'mini-app.json')))
+      throw new UserError(
+        `${dir} keeps its manifest at mini-app.json; move it to ${MANIFEST_FILE} (paths in it stay as they are).`,
+      )
     throw new UserError(`${dir} is not a mini app: it has no readable ${MANIFEST_FILE}.`)
   }
 }

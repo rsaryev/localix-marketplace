@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import { fakeKit } from '../testing/fake-kit'
 import { tempDirPerTest, writeTree } from '../testing/temp'
 import { assemblePackage, PACKAGE_DIR } from './assemble'
-import { CATALOG_FILE, packIntoCatalog } from './pack'
+import { packIntoMarketplace } from './pack'
 import { validatePackage } from './validate'
 
 const tempDir = tempDirPerTest('mini-app-package-')
@@ -24,7 +24,7 @@ const MANIFEST = {
 function checkedApp() {
   const dir = tempDir()
   writeTree(dir, {
-    'mini-app.json': JSON.stringify(MANIFEST),
+    '.localix-mini-app/mini-app.json': JSON.stringify(MANIFEST),
     'guide.md': '# Guide',
     'icon.svg': '<svg/>',
     'media/main.png': 'png',
@@ -61,15 +61,15 @@ describe('assemblePackage', () => {
     const packageDir = await assemblePackage(dir, outputs)
     expect(packageDir).toBe(join(dir, PACKAGE_DIR))
     expect(files(packageDir).sort()).toEqual([
+      '.localix-mini-app/mini-app.json',
       'README.md',
       'dist/backend/index-abc.mjs',
       'dist/ui/artifact.json',
       'guide.md',
       'icon.svg',
       'media/main.png',
-      'mini-app.json',
     ])
-    const manifest = JSON.parse(readFileSync(join(packageDir, 'mini-app.json'), 'utf8'))
+    const manifest = JSON.parse(readFileSync(join(packageDir, '.localix-mini-app/mini-app.json'), 'utf8'))
     expect(manifest.backend).toBe('./dist/backend/index-abc.mjs')
   })
 
@@ -95,7 +95,7 @@ describe('assemblePackage', () => {
       'docs/help.md': '# Help',
     })
     const manifest = { ...MANIFEST, guide: './docs/help.md' }
-    writeTree(dir, { 'mini-app.json': JSON.stringify(manifest) })
+    writeTree(dir, { '.localix-mini-app/mini-app.json': JSON.stringify(manifest) })
     const outputs = {
       dir: join(dir, 'dist/.candidate-1'),
       manifest,
@@ -126,12 +126,12 @@ describe('validatePackage', () => {
 
   test('a source folder is not a package, and a named file must be there', async () => {
     const dir = tempDir()
-    writeTree(dir, { 'mini-app.json': JSON.stringify(MANIFEST), 'icon.svg': '<svg/>' })
+    writeTree(dir, { '.localix-mini-app/mini-app.json': JSON.stringify(MANIFEST), 'icon.svg': '<svg/>' })
     const verdict = await validatePackage(fakeKit(), dir)
     expect(verdict.ok).toBe(false)
     expect(verdict.problems.join('\n')).toContain('backend ./backend/index.ts is a source file')
     expect(verdict.problems.join('\n')).toContain(
-      './guide.md is named in mini-app.json but missing',
+      './guide.md is named in .localix-mini-app/mini-app.json but missing',
     )
   })
 
@@ -143,7 +143,7 @@ describe('validatePackage', () => {
           ...fakeKit().tools.manifest,
           validate: async () => ({
             name: 'gpu-monitor',
-            errors: ['Invalid mini-app.json: version: invalid'],
+            errors: ['Invalid .localix-mini-app/mini-app.json: version: invalid'],
             warnings: [],
           }),
           checkMedia: async () => ['icon.svg is not a square'],
@@ -151,22 +151,36 @@ describe('validatePackage', () => {
       },
     })
     const verdict = await validatePackage(kit, await assemblePackage(dir, outputs))
-    expect(verdict.problems).toEqual(['Invalid mini-app.json: version: invalid'])
+    expect(verdict.problems).toEqual(['Invalid .localix-mini-app/mini-app.json: version: invalid'])
     expect(verdict.warnings).toEqual(['icon.svg is not a square'])
   })
 })
 
-describe('packIntoCatalog', () => {
-  test('publishes the archive and the store media beside a catalog that names them', async () => {
+const RELEASE = 'mini-app-marketplace.json'
+const NOW = () => new Date('2026-10-30T12:00:00.000Z')
+const release = (outDir: string) => JSON.parse(readFileSync(join(outDir, RELEASE), 'utf8'))
+
+describe('packIntoMarketplace', () => {
+  test('publishes the archive and the store media beside a marketplace that names them', async () => {
     const { dir, outputs } = checkedApp()
     const packageDir = await assemblePackage(dir, outputs)
     const outDir = tempDir()
-    const entry = await packIntoCatalog({ kit: fakeKit(), packageDir, outDir, publisher: 'Ada' })
-    const catalog = JSON.parse(readFileSync(join(outDir, CATALOG_FILE), 'utf8'))
-    expect(catalog.apps).toEqual([entry])
-    // A schema 2 catalog, in the shape of a Claude Code marketplace: the publisher owns it, and
-    // each app's source is its archive beside it.
-    expect(catalog).toMatchObject({ schema: 2, name: 'gpu-monitor', owner: { name: 'Ada' } })
+    const entry = await packIntoMarketplace({
+      kit: fakeKit(),
+      packageDir,
+      outDir,
+      publisher: 'Ada',
+      now: NOW,
+    })
+    // A released marketplace of the kit's schema, named after the app: the publisher keeps it,
+    // and the app's source is its archive beside it.
+    expect(release(outDir)).toEqual({
+      schema: 3,
+      name: 'gpu-monitor',
+      owner: { name: 'Ada' },
+      published: '2026-10-30T12:00:00.000Z',
+      apps: [entry],
+    })
     expect(entry.source).toMatchObject({ source: 'archive' })
     expect(entry.icon).toMatchObject({ type: 'image/svg+xml' })
     for (const file of [entry.source, entry.icon, ...(entry.screenshots as [])] as {
@@ -177,7 +191,7 @@ describe('packIntoCatalog', () => {
 
     const archive = new Bun.Archive(readFileSync(join(outDir, entry.source.url)))
     const inside = [...(await archive.files()).keys()]
-    expect(inside).toContain('mini-app.json')
+    expect(inside).toContain('.localix-mini-app/mini-app.json')
     expect(inside).not.toContain('media/main.png')
   })
 
@@ -185,34 +199,92 @@ describe('packIntoCatalog', () => {
     const { dir, outputs } = checkedApp()
     const packageDir = await assemblePackage(dir, outputs)
     const outDir = tempDir()
-    const entry = await packIntoCatalog({ kit: fakeKit(), packageDir, outDir, publisher: 'Ada' })
+    const entry = await packIntoMarketplace({ kit: fakeKit(), packageDir, outDir, publisher: 'Ada' })
     const verdict = await validatePackage(fakeKit(), join(outDir, entry.source.url))
     expect(verdict).toEqual({ ok: true, name: 'gpu-monitor', problems: [], warnings: [] })
   })
 
-  test('packing another version replaces the app in the same catalog', async () => {
+  test('packing another version replaces the app in the same marketplace, keeping its name', async () => {
     const { dir, outputs } = checkedApp()
     const packageDir = await assemblePackage(dir, outputs)
     const outDir = tempDir()
-    await packIntoCatalog({ kit: fakeKit(), packageDir, outDir, publisher: 'Ada' })
+    await packIntoMarketplace({ kit: fakeKit(), packageDir, outDir, publisher: 'Ada' })
     writeTree(packageDir, {
-      'mini-app.json': JSON.stringify({ ...MANIFEST, version: '0.3.0' }),
+      '.localix-mini-app/mini-app.json': JSON.stringify({
+        ...MANIFEST,
+        name: 'gpu-alerts',
+        version: '0.3.0',
+      }),
     })
-    await packIntoCatalog({ kit: fakeKit(), packageDir, outDir, publisher: 'Ada' })
-    const catalog = JSON.parse(readFileSync(join(outDir, CATALOG_FILE), 'utf8'))
-    expect(catalog.apps.map((app: { version: string }) => app.version)).toEqual(['0.3.0'])
+    await packIntoMarketplace({ kit: fakeKit(), packageDir, outDir, publisher: 'Ada' })
+    writeTree(packageDir, {
+      '.localix-mini-app/mini-app.json': JSON.stringify({ ...MANIFEST, version: '0.3.0' }),
+    })
+    await packIntoMarketplace({ kit: fakeKit(), packageDir, outDir, publisher: 'Ada' })
+    const packed = release(outDir)
+    expect(packed.name).toBe('gpu-monitor')
+    expect(packed.apps.map((app: { name: string; version: string }) => `${app.name} ${app.version}`)).toEqual([
+      'gpu-alerts 0.3.0',
+      'gpu-monitor 0.3.0',
+    ])
   })
 
-  test('the files it opens travel in its catalog entry, so the Store can offer it for one', async () => {
+  // An app's name may hold capitals and underscores; a marketplace's is lower-case words and dashes.
+  test('a new marketplace is named after its first app, as a marketplace may be named', async () => {
+    const { dir, outputs } = checkedApp()
+    const packageDir = await assemblePackage(dir, outputs)
+    writeTree(packageDir, {
+      '.localix-mini-app/mini-app.json': JSON.stringify({ ...MANIFEST, name: 'GPU_Monitor' }),
+    })
+    const outDir = tempDir()
+    await packIntoMarketplace({ kit: fakeKit(), packageDir, outDir, publisher: 'Ada' })
+    expect(release(outDir).name).toBe('gpu-monitor')
+  })
+
+  test('a marketplace Localix would not read is not written', async () => {
+    const { dir, outputs } = checkedApp()
+    const packageDir = await assemblePackage(dir, outputs)
+    const kit = fakeKit({
+      tools: {
+        marketplace: {
+          ...fakeKit().tools.marketplace,
+          read: () => ({ kind: 'invalid', problem: 'owner: who keeps it' }),
+        },
+      },
+    })
+    const outDir = tempDir()
+    await expect(
+      packIntoMarketplace({ kit, packageDir, outDir, publisher: ' ' }),
+    ).rejects.toThrow('The packed marketplace would not read in Localix: owner: who keeps it')
+    expect(existsSync(join(outDir, RELEASE))).toBe(false)
+  })
+
+  // Localix reads the author as one name; the manifest may say it either way.
+  test('the author is a name', async () => {
+    const { dir, outputs } = checkedApp()
+    const packageDir = await assemblePackage(dir, outputs)
+    writeTree(packageDir, {
+      '.localix-mini-app/mini-app.json': JSON.stringify({ ...MANIFEST, author: { name: 'Ada' } }),
+    })
+    const entry = await packIntoMarketplace({
+      kit: fakeKit(),
+      packageDir,
+      outDir: tempDir(),
+      publisher: 'Ada',
+    })
+    expect(entry.author).toBe('Ada')
+  })
+
+  test('the files it opens travel in its marketplace entry, so the Store can offer it for one', async () => {
     const { dir, outputs } = checkedApp()
     const packageDir = await assemblePackage(dir, outputs)
     const opens = [
       { ext: ['gpu', 'gpulog'], name: 'GPU Log', role: 'Viewer', mimeType: 'text/x-gpu', x: 1 },
     ]
     writeTree(packageDir, {
-      'mini-app.json': JSON.stringify({ ...MANIFEST, fileAssociations: opens }),
+      '.localix-mini-app/mini-app.json': JSON.stringify({ ...MANIFEST, fileAssociations: opens }),
     })
-    const entry = await packIntoCatalog({
+    const entry = await packIntoMarketplace({
       kit: fakeKit(),
       packageDir,
       outDir: tempDir(),
@@ -223,12 +295,12 @@ describe('packIntoCatalog', () => {
     ])
   })
 
-  test('without a homepage, the catalog entry links the repository the app is released from', async () => {
+  test('without a homepage, the marketplace entry links the repository the app is released from', async () => {
     const { dir, outputs } = checkedApp()
     const packageDir = await assemblePackage(dir, outputs)
     const pack = async (manifest: Record<string, unknown>) => {
-      writeTree(packageDir, { 'mini-app.json': JSON.stringify({ ...MANIFEST, ...manifest }) })
-      return packIntoCatalog({ kit: fakeKit(), packageDir, outDir: tempDir(), publisher: 'Ada' })
+      writeTree(packageDir, { '.localix-mini-app/mini-app.json': JSON.stringify({ ...MANIFEST, ...manifest }) })
+      return packIntoMarketplace({ kit: fakeKit(), packageDir, outDir: tempDir(), publisher: 'Ada' })
     }
     const released = await pack({ repository: 'git+https://github.com/ada/gpu-monitor.git' })
     expect(released.homepage).toBe('https://github.com/ada/gpu-monitor')
@@ -242,14 +314,14 @@ describe('packIntoCatalog', () => {
   test('an app without a valid icon is refused', async () => {
     const packageDir = tempDir()
     mkdirSync(packageDir, { recursive: true })
-    writeTree(packageDir, { 'mini-app.json': JSON.stringify({ ...MANIFEST, icon: undefined }) })
+    writeTree(packageDir, { '.localix-mini-app/mini-app.json': JSON.stringify({ ...MANIFEST, icon: undefined }) })
     const kit = fakeKit({
       tools: {
         manifest: { ...fakeKit().tools.manifest, checkMedia: async () => ['icon is required'] },
       },
     })
     await expect(
-      packIntoCatalog({ kit, packageDir, outDir: tempDir(), publisher: 'Ada' }),
+      packIntoMarketplace({ kit, packageDir, outDir: tempDir(), publisher: 'Ada' }),
     ).rejects.toThrow('icon is required')
   })
 })

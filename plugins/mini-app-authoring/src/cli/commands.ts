@@ -6,7 +6,7 @@ import { UserError } from '../lib/errors'
 import { getLocalix } from '../localix/get-localix'
 import { installIntoLocalix } from '../localix/install'
 import { assemblePackage } from '../package/assemble'
-import { CATALOG_FILE, packIntoCatalog } from '../package/pack'
+import { packIntoMarketplace } from '../package/pack'
 import { formatVerdict, validatePackage } from '../package/validate'
 import { WORKFLOW_FILE, writeReleaseSetup } from '../publish/ci'
 import {
@@ -117,18 +117,22 @@ const pack: Command = async (args, context) => {
   const publisher = stringOption(args, 'publisher') ?? author
   if (!publisher) {
     throw new UserError(
-      'Name the publisher people will see: --publisher "<name>", or "author" in mini-app.json.',
+      `Name the publisher people will see: --publisher "<name>", or "author" in ${MANIFEST_FILE}.`,
     )
   }
   const built = await buildPackage(dir, context)
   if (!built) return 1
-  const outDir = resolve(context.cwd, stringOption(args, 'out') ?? join(dir, 'dist', 'catalog'))
+  const outDir = resolve(
+    context.cwd,
+    stringOption(args, 'out') ?? join(dir, 'dist', 'marketplace'),
+  )
   const { kit } = await context.kit()
-  const entry = await packIntoCatalog({ kit, packageDir: built.packageDir, outDir, publisher })
+  const entry = await packIntoMarketplace({ kit, packageDir: built.packageDir, outDir, publisher })
+  const release = kit.tools.marketplace.releaseFile
   context.out(
     [
-      `Packed ${entry.name} ${entry.version} into ${join(outDir, CATALOG_FILE)}.`,
-      `Upload every file in ${outDir} to one HTTPS folder (a GitHub release, a site); people add the address of ${CATALOG_FILE} there as a catalog in Localix's mini app store.`,
+      `Packed ${entry.name} ${entry.version} into ${join(outDir, release)}.`,
+      `Upload every file in ${outDir} to one place (a GitHub release, a site); people add the address of ${release} there, or the GitHub repository whose latest release carries it, in Localix: Store → Sources → Add source.`,
     ].join('\n'),
   )
   return 0
@@ -181,7 +185,7 @@ const ci: Command = async (args, context) => {
   const publisher = stringOption(args, 'publisher')
   if (!publisher && !manifest.author) {
     throw new UserError(
-      'Name the publisher people will see: --publisher "<name>" (kept as "author" in mini-app.json).',
+      `Name the publisher people will see: --publisher "<name>" (kept as "author" in ${MANIFEST_FILE}).`,
     )
   }
   const { kit } = await context.kit()
@@ -197,7 +201,7 @@ const ci: Command = async (args, context) => {
   context.out(
     [
       `Wrote ${WORKFLOW_FILE}: every push and pull request is checked, and a tag v<version> releases the app — built with the kit of Localix ${pin.ref}.`,
-      `Release: commit and push, then \`git tag v${version} && git push origin v${version}\`. People add https://github.com/<owner>/<repo>/releases/latest/download/mini-app-catalog.json in Localix's mini app store.`,
+      `Release: commit and push, then \`git tag v${version} && git push origin v${version}\`. People add <owner>/<repo> in Localix: Store → Sources → Add source.`,
     ].join('\n'),
   )
   return 0
@@ -225,14 +229,14 @@ export const HELP = `mini-app — create, check, build, install and share Locali
   mini-app check [folder] [--json] [--template]   every gate Localix applies, in one report
   mini-app build [folder]                check, then write the package to <folder>/dist/package
   mini-app install [folder]              build, then install into the running Localix
-  mini-app pack [folder] [--out <dir>] [--publisher "…"]   add the app to a shareable catalog
+  mini-app pack [folder] [--out <dir>] [--publisher "…"]   add the app to a releasable marketplace
   mini-app validate <package folder | .tar.gz> [--json]
   mini-app icon [folder] --glyph '<path …/>' [--tint #hex]   draw the app's icon from a 24×24 glyph
-  mini-app marketplace validate [file] [--fetch] [--reserve <catalog url>]   check a .mini-app/marketplace.json
-  mini-app marketplace build [file] [--out <dir>]   pack its folders' apps into one catalog with its links
+  mini-app marketplace validate [file] [--fetch] [--curation]   check a .localix-mini-app/marketplace.json
+  mini-app marketplace build [file] [--out <dir>] [--curation]   pack its folders' apps into a release with its links
   mini-app ci [folder] [--publisher "…"] [--repository <owner>/<repo>]   release it from GitHub: a workflow that checks and releases tags
   mini-app keygen                        make your signing key, once (kept in ~/.config/localix)
-  mini-app sign [catalog folder]         sign a packed catalog: MINI_APP_SIGNING_KEY, else your key
+  mini-app sign [folder] [--next-key <key>]   sign a packed marketplace: MINI_APP_SIGNING_KEY, else your key
   mini-app contract                      the SDK contract a mini app is written against
   mini-app kit [folder] [--update [--version <v>|latest]]   the kit the app builds with; --update installs a release's
   mini-app get-localix                   install the latest Localix (verified) and open it

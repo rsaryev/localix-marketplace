@@ -9,7 +9,7 @@ import {
 
 /**
  * Handing a built package to Localix. Localix validates it, installs it as the person's own mini
- * app (no catalog updates or removes it), switches it on and swaps it into any open view. The
+ * app (no marketplace updates or removes it), switches it on and swaps it into any open view. The
  * toolchain never writes into Localix's folders itself: installing is Localix's job.
  */
 
